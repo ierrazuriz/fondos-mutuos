@@ -356,9 +356,9 @@
     </div>
     <div class="chart-wrap"><canvas id="histChart"></canvas></div>
     <div class="chart-legend">
-      <span><span class="dot" style="background:#219c4a"></span>Neto mensual positivo</span>
-      <span><span class="dot" style="background:#e53935"></span>Neto mensual negativo</span>
-      <span><span class="dot" style="background:#f26439"></span>Acumulado 12 meses</span>
+      <span><span class="dot" style="background:#219c4a"></span>Neto positivo</span>
+      <span><span class="dot" style="background:#e53935"></span>Neto negativo</span>
+      <span><span class="dot" style="background:rgba(180,180,180,.5)"></span>Sin datos</span>
     </div>
   </div>
   <div class="table-box" style="margin-top:16px">
@@ -706,7 +706,7 @@ function downloadExcel() {
 async function loadHistory() {
   setStatus('Calculando historial mensual…', 'loading');
   try {
-    // Build last 12 months list (oldest → newest)
+    // Always build exactly 12 months (oldest → newest), including empty ones
     const now = new Date();
     const months = [];
     for (let i = 11; i >= 0; i--) {
@@ -714,22 +714,21 @@ async function loadHistory() {
       months.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
     }
 
-    // Fetch each month's daily summary in parallel
-    const results = await Promise.all(months.map(({ year, month }) =>
-      api(`/api/monthly-summary?year=${year}&month=${month}`)
+    const results = await Promise.all(months.map(({ year, month }) => {
+      const ym = `${year}-${String(month).padStart(2, '0')}`;
+      return api(`/api/monthly-summary?year=${year}&month=${month}`)
         .then(days => {
           const loaded = days.filter(d => d.loaded);
-          if (!loaded.length) return null;
           const aportes  = loaded.reduce((s, d) => s + (d.aportes  || 0), 0);
           const rescates = loaded.reduce((s, d) => s + (d.rescates || 0), 0);
-          const ym = `${year}-${String(month).padStart(2, '0')}`;
           return { year_month: ym, aportes, rescates, net_flow: aportes - rescates,
-                   days_count: loaded.length, working_days: days.length };
+                   days_count: loaded.length, working_days: days.length, hasData: loaded.length > 0 };
         })
-        .catch(() => null)
-    ));
+        .catch(() => ({ year_month: ym, aportes: 0, rescates: 0, net_flow: 0,
+                        days_count: 0, working_days: 0, hasData: false }));
+    }));
 
-    histData = results.filter(Boolean);
+    histData = results;
     setStatus('');
     renderHistTable();
     buildHistChart();
@@ -751,63 +750,63 @@ function renderHistCards() {
 
 function buildHistChart() {
   if (!histData.length) return;
-  const labels  = histData.map(d => {
+
+  const labels     = histData.map(d => {
     const [y, m] = d.year_month.split('-');
     return new Date(+y, +m-1, 1).toLocaleString('es-CL', { month: 'short', year: '2-digit' });
   });
-  const nets      = histData.map(d => (d.net_flow||0) / 1e6);
-  const cumul     = nets.reduce((acc, v) => { acc.push((acc[acc.length-1]||0)+v); return acc; }, []);
-  const barColors = nets.map(v => v >= 0 ? 'rgba(33,156,74,.75)' : 'rgba(229,57,53,.75)');
+  const nets       = histData.map(d => (d.net_flow || 0) / 1e6);
+  const barColors  = histData.map(d =>
+    !d.hasData ? 'rgba(180,180,180,.3)' : d.net_flow >= 0 ? 'rgba(33,156,74,.8)' : 'rgba(229,57,53,.8)'
+  );
 
-  const isDark = document.body.classList.contains('dark-mode');
-  const gridColor = isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.06)';
+  const isDark    = document.body.classList.contains('dark-mode');
+  const gridColor = isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.07)';
   const tickColor = isDark ? '#aaa' : '#666';
 
   if (histChart) histChart.destroy();
   histChart = new Chart(document.getElementById('histChart'), {
+    type: 'bar',
     data: {
       labels,
-      datasets: [
-        {
-          type: 'bar',
-          label: 'Flujo Neto Mensual (MM CLP)',
-          data: nets,
-          backgroundColor: barColors,
-          yAxisID: 'yBar',
-          order: 2,
-        },
-        {
-          type: 'line',
-          label: 'Acumulado 12 meses (MM CLP)',
-          data: cumul,
-          borderColor: '#f26439',
-          backgroundColor: 'rgba(242,100,57,.08)',
-          borderWidth: 2.5,
-          pointRadius: 4,
-          pointBackgroundColor: '#f26439',
-          fill: true,
-          tension: .35,
-          yAxisID: 'yLine',
-          order: 1,
-        },
-      ],
+      datasets: [{
+        label: 'Flujo Neto Mensual (MM CLP)',
+        data: nets,
+        backgroundColor: barColors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index' },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('es-CL',{minimumFractionDigits:1})} MM`
+            label: ctx => {
+              const d = histData[ctx.dataIndex];
+              if (!d.hasData) return 'Sin datos';
+              return `Neto: ${ctx.parsed.y.toLocaleString('es-CL', { minimumFractionDigits: 1 })} MM CLP`;
+            },
+            afterLabel: ctx => {
+              const d = histData[ctx.dataIndex];
+              if (!d.hasData) return '';
+              return [
+                `Aportes:  ${(d.aportes/1e6).toLocaleString('es-CL',{minimumFractionDigits:1})} MM`,
+                `Rescates: ${(d.rescates/1e6).toLocaleString('es-CL',{minimumFractionDigits:1})} MM`,
+                `Días: ${d.days_count}/${d.working_days}`,
+              ];
+            },
           }
         }
       },
       scales: {
-        yBar:  { type:'linear', position:'right', grid:{ display:false }, ticks:{ color:tickColor, callback: v => v.toLocaleString('es-CL')+' MM' } },
-        yLine: { type:'linear', position:'left',  grid:{ color:gridColor }, ticks:{ color:tickColor, callback: v => v.toLocaleString('es-CL')+' MM' } },
-        x:     { grid:{ display:false }, ticks:{ color:tickColor } },
+        y: {
+          grid: { color: gridColor },
+          ticks: { color: tickColor, callback: v => v.toLocaleString('es-CL') + ' MM' },
+        },
+        x: { grid: { display: false }, ticks: { color: tickColor } },
       },
     },
   });
