@@ -348,11 +348,14 @@
 
 <!-- TAB: HISTÓRICO ANUAL -->
 <div class="page" id="page-historico">
+  <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <button class="btn-primary" id="btnBackfill" onclick="backfillHistory()" style="font-size:.9rem;padding:9px 22px">⬇ Cargar historial desde AAFM (12 meses)</button>
+    <span style="font-size:.78rem;color:var(--text2)">Descarga los datos históricos diarios y calcula el neto mensual.</span>
+  </div>
   <div class="cards" id="histCards"></div>
   <div class="chart-box">
     <div class="chart-header">
       <h3>Flujo Neto Mensual — Últimos 12 meses</h3>
-      <button class="btn-outline" id="btnBackfill" onclick="backfillHistory()" style="font-size:.78rem;padding:5px 12px">⬇ Cargar historial</button>
     </div>
     <div class="chart-wrap"><canvas id="histChart"></canvas></div>
     <div class="chart-legend">
