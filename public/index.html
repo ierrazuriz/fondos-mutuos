@@ -3,115 +3,301 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Aportes y Rescates — FFMM Accionario Nacional</title>
+  <title>Aportes y Rescates FFMM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#222;font-size:14px}
+    :root {
+      --primary: #f26439;
+      --primary-dark: #d73d26;
+      --success: #219c4a;
+      --bg: #fff;
+      --bg2: #fafafa;
+      --text: #333;
+      --text2: #666;
+      --border: #e0e0e0;
+      --hover-row: #fff5f2;
+      --hover-text: #f26439;
+      --last-reg: #fff0e6;
+      --th-bg: #f26439;
+    }
+    .dark-mode {
+      --bg: #1a1a1a;
+      --bg2: #222;
+      --text: #fff;
+      --text2: #aaa;
+      --border: #444;
+      --hover-row: #2a1a14;
+      --hover-text: #f26439;
+      --last-reg: #2a1a10;
+      --th-bg: #d73d26;
+    }
 
-    header{background:#1b3a6b;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-    header h1{font-size:1.1rem;font-weight:600;flex:1}
-    header a{color:#a8c8f0;font-size:.8rem;text-decoration:none}
-    header a:hover{color:#fff}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg2); color: var(--text); font-size: 14px; transition: background .2s, color .2s; }
 
-    .tabs{display:flex;background:#fff;border-bottom:2px solid #dde3ed;padding:0 20px}
-    .tab{padding:10px 20px;cursor:pointer;font-weight:500;color:#666;border-bottom:3px solid transparent;margin-bottom:-2px;transition:.15s}
-    .tab.active{color:#1b3a6b;border-color:#1b3a6b}
+    /* HEADER */
+    .header {
+      background: var(--bg);
+      border-bottom: 2px solid var(--primary);
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-title {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--primary);
+      padding: 12px 0;
+      flex: 1;
+      letter-spacing: -.01em;
+    }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .dark-toggle {
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: .8rem;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .dark-toggle:hover { border-color: var(--primary); color: var(--primary); }
 
-    .controls{background:#fff;padding:12px 20px;border-bottom:1px solid #e0e5ed;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
-    .ctrl-group{display:flex;flex-direction:column;gap:4px}
-    .ctrl-group label{font-size:.78rem;color:#666;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
-    input[type=date]{padding:6px 10px;border:1px solid #ccc;border-radius:5px;font-size:.88rem}
-    .cat-checks{display:flex;flex-direction:column;gap:3px}
-    .cat-checks label{display:flex;align-items:center;gap:6px;font-size:.82rem;cursor:pointer}
-    .cat-checks input[type=checkbox]{accent-color:#1b3a6b;width:14px;height:14px}
-    button{padding:7px 16px;border:none;border-radius:5px;cursor:pointer;font-size:.85rem;font-weight:500;white-space:nowrap}
-    .btn-primary{background:#1b3a6b;color:#fff}.btn-primary:hover{background:#254e8e}
-    .btn-green{background:#27ae60;color:#fff}.btn-green:hover{background:#229954}
-    .btn-orange{background:#e67e22;color:#fff}.btn-orange:hover{background:#ca6f1e}
-    .btn-gray{background:#e0e5ed;color:#444}.btn-gray:hover{background:#ccd3de}
+    /* NAVBAR */
+    .navbar {
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 0;
+    }
+    .nav-tab {
+      min-width: 150px;
+      padding: 10px 18px;
+      color: rgba(255,255,255,.75);
+      font-weight: 500;
+      font-size: .88rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: .15s;
+      text-align: center;
+    }
+    .nav-tab:hover { color: #fff; }
+    .nav-tab.active { color: #fff; border-bottom-color: #fff; background: rgba(0,0,0,.1); }
 
-    .status{padding:7px 20px;background:#eaf3fb;border-bottom:1px solid #c8dff5;font-size:.8rem;color:#555;min-height:30px}
-    .status.loading{background:#fff8e1;border-color:#ffe082}
-    .status.error{background:#fdecea;border-color:#f5c6cb;color:#c0392b}
+    /* CONTROLS */
+    .controls {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+    .ctrl-label { font-size: .73rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+    input[type=date] {
+      padding: 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: .85rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+    }
+    input[type=date]:focus { outline: none; border-color: var(--primary); }
+    .cat-checks { display: flex; flex-direction: column; gap: 4px; }
+    .cat-checks label { display: flex; align-items: center; gap: 7px; font-size: .82rem; cursor: pointer; color: var(--text); }
+    .cat-checks input[type=checkbox] { accent-color: var(--primary); width: 14px; height: 14px; }
+    .btn-group { display: flex; gap: 8px; align-items: center; }
+    button {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: .15s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline { background: var(--bg); color: var(--primary); border: 1.5px solid var(--primary); }
+    .btn-outline:hover { background: var(--primary); color: #fff; }
+    .btn-download { background: var(--bg); color: var(--success); border: 1.5px solid var(--success); }
+    .btn-download:hover { background: var(--success); color: #fff; transform: scale(1.04); }
 
-    .page{display:none;padding:16px 20px 24px}
-    .page.active{display:block}
+    /* STATUS */
+    .status {
+      padding: 6px 20px;
+      font-size: .78rem;
+      color: var(--text2);
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      min-height: 28px;
+    }
+    .status.loading { background: #fff8e1; color: #856404; }
+    .status.error { background: #fdecea; color: #c0392b; }
+    .dark-mode .status.loading { background: #332a00; color: #ffd54f; }
+    .dark-mode .status.error { background: #3b0000; color: #ff8a80; }
 
-    /* --- CARDS --- */
-    .cards{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-    .card{background:#fff;border-radius:8px;padding:14px 18px;flex:1;min-width:160px;border-left:4px solid #1b3a6b;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-    .card.green{border-color:#27ae60}.card.red{border-color:#c0392b}.card.blue{border-color:#2980b9}
-    .card .lbl{font-size:.72rem;color:#888;text-transform:uppercase;letter-spacing:.4px}
-    .card .val{font-size:1.35rem;font-weight:700;margin-top:3px}
-    .card .sub{font-size:.72rem;color:#aaa;margin-top:2px}
-    .positive{color:#27ae60}.negative{color:#c0392b}
+    /* PAGE */
+    .page { display: none; padding: 16px 20px 32px; }
+    .page.active { display: block; }
 
-    /* --- CHART --- */
-    .chart-box{background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px}
-    .chart-box h3{font-size:.9rem;color:#444;margin-bottom:12px;font-weight:600}
-    .chart-wrap{position:relative;height:260px}
-    .chart-legend{display:flex;gap:16px;margin-top:8px;justify-content:center;font-size:.78rem;color:#666}
-    .chart-legend span{display:flex;align-items:center;gap:5px}
-    .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+    /* CARDS */
+    .cards { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .card {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 14px 18px;
+      flex: 1;
+      min-width: 160px;
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    }
+    .card.c-green { border-color: #219c4a; }
+    .card.c-red { border-color: #e53935; }
+    .card.c-blue { border-color: #1976d2; }
+    .card .lbl { font-size: .7rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+    .card .val { font-size: 1.3rem; font-weight: 700; margin-top: 4px; color: var(--text); }
+    .card .sub { font-size: .7rem; color: var(--text2); margin-top: 3px; }
+    .pos { color: #219c4a; }
+    .neg { color: #e53935; }
 
-    /* --- TABLE --- */
-    .table-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
-    .table-toolbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #eee;flex-wrap:wrap}
-    .table-toolbar input{padding:5px 10px;border:1px solid #ccc;border-radius:5px;font-size:.83rem;width:220px}
-    .table-scroll{overflow-x:auto}
-    table{width:100%;border-collapse:collapse;font-size:.82rem}
-    thead{background:#1b3a6b;color:#fff;position:sticky;top:0}
-    th{padding:9px 12px;text-align:left;white-space:nowrap;cursor:pointer;user-select:none}
-    th:hover{background:#254e8e}
-    th.asc::after{content:' ↑'}th.desc::after{content:' ↓'}
-    td{padding:7px 12px;border-bottom:1px solid #f2f4f8;white-space:nowrap}
-    tr:last-child td{border-bottom:none}
-    tr:hover td{background:#f8fafc}
-    .tfoot td{font-weight:700;background:#edf1f7;border-top:2px solid #ccc}
+    /* TABLE WRAPPER */
+    .table-box {
+      background: var(--bg);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .table-toolbar {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      padding: 6px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: .83rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      width: 260px;
+    }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+    .row-count { font-size: .78rem; color: var(--text2); }
+    .table-scroll { overflow-x: auto; max-height: calc(100vh - 380px); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 1200px; }
+    thead { position: sticky; top: 0; z-index: 1; }
+    th {
+      background: var(--th-bg);
+      color: #fff;
+      padding: 9px 12px;
+      text-align: left;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 600;
+      font-size: .78rem;
+      letter-spacing: .02em;
+    }
+    th:hover { opacity: .9; }
+    th.asc::after { content: ' ↑'; }
+    th.desc::after { content: ' ↓'; }
+    td { padding: 7px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text); }
+    tr:hover td { background: var(--hover-row); color: var(--hover-text); }
+    tr.last-reg td { background: var(--last-reg); border-left: 3px solid var(--primary); }
+    tr:last-child td { border-bottom: none; }
+    .tfoot td { font-weight: 700; background: var(--bg2); border-top: 2px solid var(--border); color: var(--text); }
+    .tfoot tr:hover td { background: var(--bg2); color: var(--text); }
 
-    .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;background:#e8f5e9;color:#2e7d32}
-    .empty-msg{text-align:center;padding:32px;color:#aaa}
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: .72rem;
+      font-weight: 600;
+      background: #fff0e6;
+      color: var(--primary);
+    }
+    .dark-mode .badge { background: #2a1a10; }
+    .empty-msg { text-align: center; padding: 32px; color: var(--text2); }
 
-    /* Monthly progress */
-    .month-progress{background:#fff;border-radius:8px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-    .month-progress h3{font-size:.88rem;color:#444;margin-bottom:8px;font-weight:600}
-    .days-grid{display:flex;flex-wrap:wrap;gap:4px}
-    .day-chip{padding:3px 8px;border-radius:4px;font-size:.72rem;font-weight:500}
-    .day-chip.loaded{background:#e8f5e9;color:#2e7d32}
-    .day-chip.loading{background:#fff3cd;color:#856404}
-    .day-chip.pending{background:#f0f2f5;color:#999}
+    /* CHART */
+    .chart-box {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 16px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+      margin-bottom: 16px;
+    }
+    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .chart-header h3 { font-size: .9rem; font-weight: 600; color: var(--text); }
+    .chart-wrap { position: relative; height: 400px; }
+    .chart-legend { display: flex; gap: 16px; margin-top: 10px; justify-content: center; flex-wrap: wrap; font-size: .78rem; color: var(--text2); }
+    .chart-legend span { display: flex; align-items: center; gap: 5px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
-    footer{text-align:center;padding:12px;color:#aaa;font-size:.75rem}
-    footer a{color:#1b3a6b}
+    /* DAYS GRID */
+    .days-box { background: var(--bg); border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+    .days-box h3 { font-size: .85rem; font-weight: 600; color: var(--text2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .4px; }
+    .days-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+    .day-chip { padding: 3px 9px; border-radius: 4px; font-size: .72rem; font-weight: 500; }
+    .day-chip.loaded { background: #e8f5e9; color: #2e7d32; }
+    .day-chip.pending { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); }
+    .dark-mode .day-chip.loaded { background: #1b3a1f; color: #81c784; }
+
+    footer { text-align: center; padding: 12px; color: var(--text2); font-size: .75rem; border-top: 1px solid var(--border); background: var(--bg); }
+    footer a { color: var(--primary); text-decoration: none; }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>Aportes y Rescates — FFMM Accionario Nacional</h1>
-  <a href="https://estadisticas2.aafm.cl/DailyStadistics" target="_blank" rel="noopener">Fuente: AAFM ↗</a>
-</header>
-
-<div class="tabs">
-  <div class="tab active" onclick="showTab('diario')">Diario</div>
-  <div class="tab" onclick="showTab('mensual')">Acumulado Mensual</div>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-title">Aportes y Rescates FFMM — Accionario Nacional</div>
+  <div class="header-actions">
+    <a href="https://estadisticas2.aafm.cl/DailyStadistics" target="_blank" rel="noopener"
+       style="font-size:.78rem;color:var(--text2);text-decoration:none">AAFM.cl ↗</a>
+    <button class="dark-toggle" onclick="toggleDark()">☀ / ☾</button>
+  </div>
 </div>
 
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="nav-tab active" onclick="showTab('diario')">Aportes y Rescates</div>
+  <div class="nav-tab" onclick="showTab('mensual')">Acumulado Mensual</div>
+</div>
+
+<!-- CONTROLS -->
 <div class="controls">
   <div class="ctrl-group">
-    <label>Fecha</label>
+    <div class="ctrl-label">Fecha</div>
     <input type="date" id="dateInput"/>
   </div>
   <div class="ctrl-group">
-    <label>Categorías AFM</label>
+    <div class="ctrl-label">Categorías AFM</div>
     <div class="cat-checks" id="catChecks"></div>
   </div>
-  <div class="ctrl-group" style="justify-content:flex-end;margin-top:auto;gap:6px;display:flex;flex-direction:row;align-items:flex-end">
+  <div class="btn-group" style="margin-bottom:2px">
     <button class="btn-primary" onclick="loadDay()">Consultar</button>
-    <button class="btn-orange" onclick="refreshDay()">Actualizar</button>
-    <button class="btn-green" onclick="downloadExcel()">⬇ Excel</button>
+    <button class="btn-outline update-button-compact" onclick="refreshDay()">Actualizar</button>
+    <button class="btn-download download-button" onclick="downloadExcel()">⬇ Descargar Excel</button>
   </div>
 </div>
 
@@ -120,13 +306,13 @@
 <!-- TAB: DIARIO -->
 <div class="page active" id="page-diario">
   <div class="cards" id="cards"></div>
-  <div class="table-wrap">
+  <div class="table-box">
     <div class="table-toolbar">
-      <input type="text" id="searchBox" placeholder="Buscar fondo o administradora..." oninput="renderTable()"/>
-      <span id="rowCount" style="color:#888;font-size:.8rem"></span>
+      <input class="search-input" type="text" id="searchBox" placeholder="Buscar fondo o administradora..." oninput="renderTable()"/>
+      <span class="row-count" id="rowCount"></span>
     </div>
     <div class="table-scroll">
-      <table id="mainTable">
+      <table>
         <thead id="thead"></thead>
         <tbody id="tbody"><tr><td class="empty-msg" colspan="20">Presiona Consultar para cargar datos.</td></tr></tbody>
         <tfoot id="tfoot"></tfoot>
@@ -139,21 +325,23 @@
 <div class="page" id="page-mensual">
   <div class="cards" id="monthCards"></div>
   <div class="chart-box">
-    <h3 id="chartTitle">Flujo Neto Acumulado — mes actual</h3>
+    <div class="chart-header">
+      <h3 id="chartTitle">Flujo Neto Acumulado</h3>
+    </div>
     <div class="chart-wrap"><canvas id="myChart"></canvas></div>
     <div class="chart-legend">
-      <span><span class="dot" style="background:#27ae60"></span>Flujo neto diario positivo</span>
-      <span><span class="dot" style="background:#c0392b"></span>Flujo neto diario negativo</span>
-      <span><span class="dot" style="background:#1b3a6b"></span>Acumulado</span>
+      <span><span class="dot" style="background:#219c4a"></span>Flujo neto diario positivo</span>
+      <span><span class="dot" style="background:#e53935"></span>Flujo neto diario negativo</span>
+      <span><span class="dot" style="background:#f26439"></span>Acumulado del mes</span>
     </div>
   </div>
-  <div class="month-progress">
+  <div class="days-box">
     <h3>Días cargados</h3>
     <div class="days-grid" id="daysGrid"></div>
   </div>
 </div>
 
-<footer>Datos desde <a href="https://estadisticas2.aafm.cl/DailyStadistics" target="_blank">AAFM.cl</a></footer>
+<footer>Datos obtenidos desde <a href="https://estadisticas2.aafm.cl/DailyStadistics" target="_blank">AAFM — Asociación de Fondos Mutuos</a></footer>
 
 <script>
 // ─── Config ────────────────────────────────────────────────────────────────
@@ -168,45 +356,58 @@ const DEFAULT_CATS = [
 // ─── State ─────────────────────────────────────────────────────────────────
 let allRows = [], headers = [];
 let sortCol = null, sortDir = 1;
-let chart = null;
-let monthData = []; // [{ date, loaded, aportes, rescates, netFlow }]
+let chart = null, monthData = [];
+let darkMode = localStorage.getItem('dark') === '1';
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 (function init() {
-  // Build category checkboxes
+  if (darkMode) document.body.classList.add('dark-mode');
+
+  // Category checkboxes
   const wrap = document.getElementById('catChecks');
   DEFAULT_CATS.forEach(cat => {
-    const id = 'cat_' + cat.replace(/\s+/g, '_');
-    wrap.innerHTML += `<label><input type="checkbox" id="${id}" value="${cat}" checked onchange="renderTable();buildMonthChart()"> ${cat}</label>`;
+    const id = 'cat_' + cat.replace(/\W+/g, '_');
+    const label = document.createElement('label');
+    label.innerHTML = `<input type="checkbox" id="${id}" value="${cat}" checked> ${cat}`;
+    label.querySelector('input').addEventListener('change', () => { renderTable(); });
+    wrap.appendChild(label);
   });
 
-  const yesterday = isoDate(-1);
-  const input = document.getElementById('dateInput');
-  input.value = yesterday;
-  input.max = yesterday;
-  input.addEventListener('change', loadDay);
+  const yesterday = isoOffset(-1);
+  const inp = document.getElementById('dateInput');
+  inp.value = yesterday;
+  inp.max = yesterday;
+  inp.addEventListener('change', loadDay);
 
   loadDay();
   loadMonthly();
 })();
 
-// ─── Tabs ──────────────────────────────────────────────────────────────────
-function showTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['diario','mensual'][i] === name));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  if (name === 'mensual' && monthData.length === 0) loadMonthly();
+function toggleDark() {
+  darkMode = !darkMode;
+  document.body.classList.toggle('dark-mode', darkMode);
+  localStorage.setItem('dark', darkMode ? '1' : '0');
+  if (chart) buildMonthChart();
 }
 
-// ─── Daily data ────────────────────────────────────────────────────────────
+// ─── Tabs ──────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.nav-tab').forEach((t, i) =>
+    t.classList.toggle('active', ['diario','mensual'][i] === name));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+}
+
+// ─── Daily ─────────────────────────────────────────────────────────────────
 async function loadDay() {
   const date = document.getElementById('dateInput').value;
-  setStatus('Cargando datos para ' + date + '…', 'loading');
+  setStatus('Cargando datos para ' + fmtDateDisplay(date) + '…', 'loading');
   try {
-    const d = await apiFetch('/api/daily?date=' + date);
+    const d = await api('/api/daily?date=' + date);
     headers = d.headers || [];
     allRows = d.rows || [];
-    setStatus(allRows.length + ' fondos cargados. Fuente: ' + (d.source === 'cache' ? 'caché' : 'AAFM') + ' (' + fmtDateTime(d.fetched_at) + ')');
+    const src = d.source === 'cache' ? `caché (${fmtDateTime(d.fetched_at)})` : `AAFM (${fmtDateTime(d.fetched_at)})`;
+    setStatus(`${allRows.length} fondos · Fuente: ${src}`);
     renderTable();
     renderCards();
   } catch(e) { setStatus('Error: ' + e.message, 'error'); }
@@ -216,191 +417,174 @@ async function refreshDay() {
   const date = document.getElementById('dateInput').value;
   setStatus('Actualizando desde AAFM…', 'loading');
   try {
-    const d = await apiFetch('/api/refresh?date=' + date, { method: 'POST' });
+    const d = await api('/api/refresh?date=' + date, { method: 'POST' });
     headers = d.headers || [];
     allRows = d.rows || [];
-    setStatus(allRows.length + ' fondos actualizados desde AAFM.');
+    setStatus(`${allRows.length} fondos actualizados desde AAFM.`);
     renderTable();
     renderCards();
-    loadMonthly(); // refresh monthly too
+    loadMonthly();
   } catch(e) { setStatus('Error: ' + e.message, 'error'); }
 }
 
-// ─── Render table ──────────────────────────────────────────────────────────
-function getSelectedCats() {
-  return DEFAULT_CATS.filter(cat => {
-    const el = document.getElementById('cat_' + cat.replace(/\s+/g, '_'));
+// ─── Render ─────────────────────────────────────────────────────────────────
+function selectedCats() {
+  return DEFAULT_CATS.filter(c => {
+    const el = document.getElementById('cat_' + c.replace(/\W+/g, '_'));
     return el && el.checked;
   });
 }
 
-function getFilteredRows() {
-  const cats = getSelectedCats();
+function filteredRows() {
+  const cats = selectedCats();
   const q = document.getElementById('searchBox').value.toLowerCase();
   return allRows.filter(r => {
     if (!cats.includes(r['Categoría AFM'] || '')) return false;
-    if (q) {
-      const text = [r['Administradora'], r['Fondo'], r['Serie']].join(' ').toLowerCase();
-      if (!text.includes(q)) return false;
-    }
+    if (q && !['Administradora','Fondo','Serie'].map(k => r[k]||'').join(' ').toLowerCase().includes(q)) return false;
     return true;
   });
 }
 
 function renderTable() {
-  const rows = sorted(getFilteredRows());
-  renderThead();
-  renderTbody(rows);
-  renderTfoot(rows);
-  renderCards();
-  document.getElementById('rowCount').textContent = rows.length + ' fondos';
+  const rows = getSorted(filteredRows());
+  buildThead();
+  buildTbody(rows);
+  buildTfoot(rows);
+  renderCards(rows);
+  document.getElementById('rowCount').textContent = rows.length + ' registros';
 }
 
-const AKEY = () => headers.find(h => h.includes('Flujo Aporte'))  || '';
-const RKEY = () => headers.find(h => h.includes('Flujo Rescate')) || '';
-const PKEY = () => headers.find(h => h.includes('Patrimonio neto')) || '';
+const AK = () => headers.find(h => h.includes('Flujo Aporte'))   || '';
+const RK = () => headers.find(h => h.includes('Flujo Rescate'))  || '';
+const PK = () => headers.find(h => h.includes('Patrimonio neto'))|| '';
 
-function renderThead() {
-  const extra = ['Flujo Neto ($)'];
-  const cols = [...headers, ...extra];
+function buildThead() {
+  const cols = [...headers, 'Flujo Neto ($)'];
   document.getElementById('thead').innerHTML = '<tr>' + cols.map((h, i) => {
-    let cls = sortCol === i ? (sortDir > 0 ? 'asc' : 'desc') : '';
+    const cls = sortCol === i ? (sortDir > 0 ? 'asc' : 'desc') : '';
     return `<th class="${cls}" onclick="sortBy(${i})">${h}</th>`;
   }).join('') + '</tr>';
 }
 
-function renderTbody(rows) {
-  const ak = AKEY(), rk = RKEY();
+function buildTbody(rows) {
+  const ak = AK(), rk = RK();
   if (!rows.length) {
     document.getElementById('tbody').innerHTML = '<tr><td class="empty-msg" colspan="30">Sin resultados para los filtros seleccionados.</td></tr>';
     return;
   }
-  const html = rows.map(r => {
-    const a = parseNum(r[ak]), rv = parseNum(r[rk]);
-    const net = a - rv;
+  document.getElementById('tbody').innerHTML = rows.map((r, idx) => {
+    const a = pn(r[ak]), rv = pn(r[rk]), net = a - rv;
+    const isLast = idx === rows.length - 1;
     const cells = headers.map(h => {
       const v = r[h] || '';
       if (h === 'Categoría AFM') return `<td><span class="badge">${v}</span></td>`;
-      if (h === ak) return `<td class="positive">${v}</td>`;
-      if (h === rk) return `<td class="negative">${v}</td>`;
+      if (h === ak) return `<td class="pos">${v}</td>`;
+      if (h === rk) return `<td class="neg">${v}</td>`;
       return `<td>${v}</td>`;
     }).join('');
-    const netCls = net >= 0 ? 'positive' : 'negative';
-    return `<tr>${cells}<td class="${netCls}">${fmtCLP(net)}</td></tr>`;
+    return `<tr class="${isLast?'last-reg':''}">${cells}<td class="${net>=0?'pos':'neg'}">${fmtCLP(net)}</td></tr>`;
   }).join('');
-  document.getElementById('tbody').innerHTML = html;
 }
 
-function renderTfoot(rows) {
-  const ak = AKEY(), rk = RKEY();
-  const totA = rows.reduce((s, r) => s + parseNum(r[ak]), 0);
-  const totR = rows.reduce((s, r) => s + parseNum(r[rk]), 0);
+function buildTfoot(rows) {
+  const ak = AK(), rk = RK();
+  const totA = rows.reduce((s,r) => s + pn(r[ak]), 0);
+  const totR = rows.reduce((s,r) => s + pn(r[rk]), 0);
   const totN = totA - totR;
   const cells = headers.map((h, i) => {
-    if (i === 0) return `<td>TOTAL (${rows.length} fondos)</td>`;
-    if (h === ak) return `<td class="positive">${fmtCLP(totA)}</td>`;
-    if (h === rk) return `<td class="negative">${fmtCLP(totR)}</td>`;
+    if (i === 0) return `<td>TOTAL — ${rows.length} fondos</td>`;
+    if (h === ak) return `<td class="pos">${fmtCLP(totA)}</td>`;
+    if (h === rk) return `<td class="neg">${fmtCLP(totR)}</td>`;
     return '<td></td>';
   }).join('');
-  document.getElementById('tfoot').innerHTML = `<tr class="tfoot">${cells}<td class="${totN >= 0 ? 'positive' : 'negative'}">${fmtCLP(totN)}</td></tr>`;
+  document.getElementById('tfoot').innerHTML = `<tr class="tfoot">${cells}<td class="${totN>=0?'pos':'neg'}">${fmtCLP(totN)}</td></tr>`;
 }
 
-function renderCards() {
-  const rows = getFilteredRows();
-  const ak = AKEY(), rk = RKEY(), pk = PKEY();
-  const totA = rows.reduce((s, r) => s + parseNum(r[ak]), 0);
-  const totR = rows.reduce((s, r) => s + parseNum(r[rk]), 0);
-  const totP = rows.reduce((s, r) => s + parseNum(r[pk]), 0);
+function renderCards(rows) {
+  rows = rows || filteredRows();
+  const ak = AK(), rk = RK(), pk = PK();
+  const totA = rows.reduce((s,r) => s + pn(r[ak]), 0);
+  const totR = rows.reduce((s,r) => s + pn(r[rk]), 0);
+  const totP = rows.reduce((s,r) => s + pn(r[pk]), 0);
   const net = totA - totR;
   document.getElementById('cards').innerHTML = `
-    <div class="card green"><div class="lbl">Aportes</div><div class="val">${fmtMM(totA)}</div><div class="sub">MM CLP — ${rows.length} fondos</div></div>
-    <div class="card red"><div class="lbl">Rescates</div><div class="val">${fmtMM(totR)}</div><div class="sub">MM CLP</div></div>
-    <div class="card ${net >= 0 ? '' : 'red'}"><div class="lbl">Flujo Neto</div><div class="val ${net >= 0 ? 'positive' : 'negative'}">${fmtMM(net)}</div><div class="sub">${net >= 0 ? 'Entrada neta' : 'Salida neta'}</div></div>
-    <div class="card blue"><div class="lbl">Patrimonio Neto</div><div class="val">${fmtMM(totP)}</div><div class="sub">MM CLP total</div></div>
+    <div class="card c-green"><div class="lbl">Aportes</div><div class="val pos">${fmtMM(totA)}</div><div class="sub">MM CLP · ${rows.length} fondos</div></div>
+    <div class="card c-red"><div class="lbl">Rescates</div><div class="val neg">${fmtMM(totR)}</div><div class="sub">MM CLP</div></div>
+    <div class="card ${net>=0?'':'c-red'}"><div class="lbl">Flujo Neto</div><div class="val ${net>=0?'pos':'neg'}">${fmtMM(net)}</div><div class="sub">${net>=0?'Entrada neta':'Salida neta'}</div></div>
+    <div class="card c-blue"><div class="lbl">Patrimonio Neto</div><div class="val">${fmtMM(totP)}</div><div class="sub">MM CLP</div></div>
   `;
 }
 
 // ─── Sort ──────────────────────────────────────────────────────────────────
 function sortBy(i) {
-  if (sortCol === i) sortDir *= -1; else { sortCol = i; sortDir = 1; }
+  sortCol === i ? (sortDir *= -1) : (sortCol = i, sortDir = 1);
   renderTable();
 }
-function sorted(rows) {
+function getSorted(rows) {
   if (sortCol === null) return rows;
-  const allCols = [...headers, 'Flujo Neto ($)'];
-  const key = allCols[sortCol];
-  const ak = AKEY(), rk = RKEY();
+  const key = [...headers, 'Flujo Neto ($)'][sortCol];
+  const ak = AK(), rk = RK();
   return [...rows].sort((a, b) => {
-    let av, bv;
-    if (key === 'Flujo Neto ($)') {
-      av = parseNum(a[ak]) - parseNum(a[rk]);
-      bv = parseNum(b[ak]) - parseNum(b[rk]);
-    } else {
-      av = parseNum(a[key]);
-      bv = parseNum(b[key]);
-      if (!av && !bv) { av = a[key] || ''; bv = b[key] || ''; }
-    }
+    let av = key === 'Flujo Neto ($)' ? pn(a[ak]) - pn(a[rk]) : pn(a[key]) || a[key] || '';
+    let bv = key === 'Flujo Neto ($)' ? pn(b[ak]) - pn(b[rk]) : pn(b[key]) || b[key] || '';
     if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sortDir;
     return String(av).localeCompare(String(bv), 'es') * sortDir;
   });
 }
 
-// ─── Monthly chart ─────────────────────────────────────────────────────────
+// ─── Monthly ───────────────────────────────────────────────────────────────
 async function loadMonthly() {
   const now = new Date();
   const y = now.getFullYear(), m = now.getMonth() + 1;
-  const cats = getSelectedCats().join('|');
+  const cats = selectedCats().join('|');
   try {
-    const data = await apiFetch(`/api/monthly-summary?year=${y}&month=${m}&cats=${encodeURIComponent(cats)}`);
+    const data = await api(`/api/monthly-summary?year=${y}&month=${m}&cats=${encodeURIComponent(cats)}`);
     monthData = data;
     renderDaysGrid();
     buildMonthChart();
-    // Fetch uncached days one by one
-    fetchMissingDays(data.filter(d => !d.loaded).map(d => d.date), y, m, cats);
-  } catch(e) { console.error('monthly error', e); }
+    fetchMissing(data.filter(d => !d.loaded).map(d => d.date), y, m, cats);
+  } catch(e) { console.error('monthly:', e); }
 }
 
-async function fetchMissingDays(dates, y, m, cats) {
+async function fetchMissing(dates, y, m, cats) {
   for (const date of dates) {
     try {
-      setStatus(`Cargando historial: ${date}…`, 'loading');
-      await apiFetch('/api/daily?date=' + date);
-      // Re-fetch monthly summary
-      const data = await apiFetch(`/api/monthly-summary?year=${y}&month=${m}&cats=${encodeURIComponent(cats)}`);
+      setStatus(`Cargando historial: ${fmtDateDisplay(date)}…`, 'loading');
+      await api('/api/daily?date=' + date);
+      const data = await api(`/api/monthly-summary?year=${y}&month=${m}&cats=${encodeURIComponent(cats)}`);
       monthData = data;
       renderDaysGrid();
       buildMonthChart();
     } catch(e) { /* skip */ }
   }
-  setStatus('Historial mensual completo.');
+  if (dates.length) setStatus('Historial mensual completo.');
 }
 
 function buildMonthChart() {
-  const cats = getSelectedCats();
-  // Re-aggregate with current category selection using cached monthData
-  // For now use whatever the server returned — update on cat change by reloading
   const loaded = monthData.filter(d => d.loaded);
   if (!loaded.length) return;
-
-  const labels = loaded.map(d => d.date.slice(5)); // MM-DD
-  const nets = loaded.map(d => d.netFlow || 0);
-  const cumulative = nets.reduce((acc, v) => { acc.push((acc[acc.length-1] || 0) + v); return acc; }, []);
-
-  const barColors = nets.map(v => v >= 0 ? 'rgba(39,174,96,.7)' : 'rgba(192,57,43,.7)');
 
   const now = new Date();
   document.getElementById('chartTitle').textContent =
     `Flujo Neto Acumulado — ${now.toLocaleString('es-CL', { month: 'long', year: 'numeric' })}`;
 
-  // Update month summary cards
-  const totA = loaded.reduce((s, d) => s + (d.aportes || 0), 0);
-  const totR = loaded.reduce((s, d) => s + (d.rescates || 0), 0);
+  const labels  = loaded.map(d => d.date.slice(5));
+  const nets    = loaded.map(d => d.netFlow || 0);
+  const cumul   = nets.reduce((acc, v) => { acc.push((acc[acc.length-1]||0)+v); return acc; }, []);
+  const barColors = nets.map(v => v >= 0 ? 'rgba(33,156,74,.75)' : 'rgba(229,57,53,.75)');
+
+  const totA = loaded.reduce((s,d) => s+(d.aportes||0), 0);
+  const totR = loaded.reduce((s,d) => s+(d.rescates||0), 0);
   const totN = totA - totR;
   document.getElementById('monthCards').innerHTML = `
-    <div class="card green"><div class="lbl">Aportes acumulados</div><div class="val">${fmtMM(totA)}</div><div class="sub">MM CLP — ${loaded.length} días</div></div>
-    <div class="card red"><div class="lbl">Rescates acumulados</div><div class="val">${fmtMM(totR)}</div><div class="sub">MM CLP</div></div>
-    <div class="card ${totN >= 0 ? '' : 'red'}"><div class="lbl">Neto acumulado</div><div class="val ${totN >= 0 ? 'positive' : 'negative'}">${fmtMM(totN)}</div><div class="sub">${totN >= 0 ? 'Entrada neta' : 'Salida neta'} del mes</div></div>
+    <div class="card c-green"><div class="lbl">Aportes acumulados</div><div class="val pos">${fmtMM(totA)}</div><div class="sub">MM CLP · ${loaded.length} días</div></div>
+    <div class="card c-red"><div class="lbl">Rescates acumulados</div><div class="val neg">${fmtMM(totR)}</div><div class="sub">MM CLP</div></div>
+    <div class="card ${totN>=0?'':'c-red'}"><div class="lbl">Neto acumulado</div><div class="val ${totN>=0?'pos':'neg'}">${fmtMM(totN)}</div><div class="sub">${totN>=0?'Entrada neta':'Salida neta'} del mes</div></div>
   `;
+
+  const isDark = document.body.classList.contains('dark-mode');
+  const gridColor = isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.06)';
+  const tickColor = isDark ? '#aaa' : '#666';
 
   if (chart) chart.destroy();
   chart = new Chart(document.getElementById('myChart'), {
@@ -410,7 +594,7 @@ function buildMonthChart() {
         {
           type: 'bar',
           label: 'Flujo Neto Diario (MM CLP)',
-          data: nets.map(v => v / 1e6),
+          data: nets.map(v => v/1e6),
           backgroundColor: barColors,
           yAxisID: 'yBar',
           order: 2,
@@ -418,13 +602,14 @@ function buildMonthChart() {
         {
           type: 'line',
           label: 'Acumulado (MM CLP)',
-          data: cumulative.map(v => v / 1e6),
-          borderColor: '#1b3a6b',
-          backgroundColor: 'rgba(27,58,107,.08)',
+          data: cumul.map(v => v/1e6),
+          borderColor: '#f26439',
+          backgroundColor: 'rgba(242,100,57,.08)',
           borderWidth: 2.5,
           pointRadius: 3,
+          pointBackgroundColor: '#f26439',
           fill: true,
-          tension: .3,
+          tension: .35,
           yAxisID: 'yLine',
           order: 1,
         },
@@ -434,15 +619,18 @@ function buildMonthChart() {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index' },
-      plugins: { legend: { display: false }, tooltip: {
-        callbacks: {
-          label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('es-CL', { minimumFractionDigits: 1 }) + ' MM'
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('es-CL',{minimumFractionDigits:1})} MM`
+          }
         }
-      }},
+      },
       scales: {
-        yBar: { type: 'linear', position: 'right', grid: { display: false }, ticks: { callback: v => v.toLocaleString('es-CL') + ' MM' } },
-        yLine: { type: 'linear', position: 'left', ticks: { callback: v => v.toLocaleString('es-CL') + ' MM' } },
-        x: { grid: { display: false } },
+        yBar: { type:'linear', position:'right', grid:{ display:false }, ticks:{ color:tickColor, callback: v => v.toLocaleString('es-CL')+' MM' } },
+        yLine: { type:'linear', position:'left', grid:{ color:gridColor }, ticks:{ color:tickColor, callback: v => v.toLocaleString('es-CL')+' MM' } },
+        x: { grid:{ display:false }, ticks:{ color:tickColor } },
       },
     },
   });
@@ -450,44 +638,40 @@ function buildMonthChart() {
 
 function renderDaysGrid() {
   document.getElementById('daysGrid').innerHTML = monthData.map(d =>
-    `<span class="day-chip ${d.loaded ? 'loaded' : 'pending'}">${d.date.slice(5)}</span>`
+    `<span class="day-chip ${d.loaded?'loaded':'pending'}">${d.date.slice(5)}</span>`
   ).join('');
 }
 
-// ─── Excel download ────────────────────────────────────────────────────────
+// ─── Excel ─────────────────────────────────────────────────────────────────
 function downloadExcel() {
-  const rows = getFilteredRows();
+  const rows = filteredRows();
   if (!rows.length) return alert('No hay datos para descargar.');
-  const ak = AKEY(), rk = RKEY();
-  const exportRows = rows.map(r => {
-    const a = parseNum(r[ak]), rv = parseNum(r[rk]);
-    return { ...r, 'Flujo Neto ($)': a - rv };
-  });
-  const ws = XLSX.utils.json_to_sheet(exportRows, { header: [...headers, 'Flujo Neto ($)'] });
+  const ak = AK(), rk = RK();
+  const out = rows.map(r => ({ ...r, 'Flujo Neto ($)': pn(r[ak]) - pn(r[rk]) }));
+  const ws = XLSX.utils.json_to_sheet(out, { header: [...headers, 'Flujo Neto ($)'] });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'FFMM Accionario Nacional');
-  const date = document.getElementById('dateInput').value;
-  XLSX.writeFile(wb, `FFMM_Accionario_Nacional_${date}.xlsx`);
+  XLSX.writeFile(wb, `FFMM_Accionario_Nacional_${document.getElementById('dateInput').value}.xlsx`);
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-async function apiFetch(url, opts = {}) {
+async function api(url, opts={}) {
   const r = await fetch(url, opts);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
   const d = await r.json();
   if (d.error) throw new Error(d.error);
   return d;
 }
-
-function parseNum(v) {
+function pn(v) {
   if (!v || v === '-') return 0;
-  return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+  return parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
 }
-function fmtCLP(n) { return n.toLocaleString('es-CL', { maximumFractionDigits: 0 }); }
-function fmtMM(n) { return (n / 1e6).toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
-function fmtDateTime(iso) { if (!iso) return ''; return new Date(iso).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }); }
-function isoDate(offset = 0) { const d = new Date(); d.setDate(d.getDate() + offset); return d.toISOString().split('T')[0]; }
-function setStatus(msg, type = '') { const b = document.getElementById('status'); b.textContent = msg; b.className = 'status' + (type ? ' ' + type : ''); }
+function fmtCLP(n) { return n.toLocaleString('es-CL',{maximumFractionDigits:0}); }
+function fmtMM(n)  { return (n/1e6).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1}); }
+function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'}) : ''; }
+function fmtDateDisplay(iso) { return iso ? new Date(iso+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}) : ''; }
+function isoOffset(days) { const d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().split('T')[0]; }
+function setStatus(msg, type='') { const b=document.getElementById('status'); b.textContent=msg; b.className='status'+(type?' '+type:''); }
 </script>
 </body>
 </html>
