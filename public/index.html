@@ -301,8 +301,9 @@
   </div>
   <div class="btn-group" style="margin-bottom:2px">
     <button class="btn-primary" onclick="loadDay()">Consultar</button>
-    <button class="btn-outline update-button-compact" onclick="refreshDay()">Actualizar</button>
-    <button class="btn-download download-button" onclick="downloadExcel()">⬇ Descargar Excel</button>
+    <button class="btn-outline" onclick="refreshDay()">Actualizar</button>
+    <button class="btn-download" onclick="downloadExcel()">⬇ Descargar Excel</button>
+    <button class="btn-outline" id="btnBackfill" onclick="backfillHistory()" style="border-color:#1976d2;color:#1976d2">⬇ Cargar historial</button>
   </div>
 </div>
 
@@ -348,10 +349,6 @@
 
 <!-- TAB: HISTÓRICO ANUAL -->
 <div class="page" id="page-historico">
-  <div style="margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <button class="btn-primary" id="btnBackfill" onclick="backfillHistory()" style="font-size:.9rem;padding:9px 22px">⬇ Cargar historial desde AAFM (12 meses)</button>
-    <span style="font-size:.78rem;color:var(--text2)">Descarga los datos históricos diarios y calcula el neto mensual.</span>
-  </div>
   <div class="cards" id="histCards"></div>
   <div class="chart-box">
     <div class="chart-header">
