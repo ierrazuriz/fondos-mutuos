@@ -125,6 +125,62 @@ app.get('/api/monthly-history', (req, res) => {
   res.json(getMonthlyHistory(months));
 });
 
+// GET /api/backfill?months=12  — fetch missing historical days from AAFM (SSE stream)
+app.get('/api/backfill', async (req, res) => {
+  const months = Math.min(parseInt(req.query.months) || 12, 24);
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const send = (obj) => { if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`); };
+
+  try {
+    const now = new Date();
+    const yesterday = getYesterday();
+    const days = new Set();
+    for (let i = months; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const { past } = workingDaysOf(d.getFullYear(), d.getMonth() + 1);
+      past.forEach(day => days.add(day));
+    }
+    const allDays  = [...days].filter(d => d <= yesterday).sort();
+    const toFetch  = allDays.filter(d => !getCachedData(d));
+    const already  = allDays.length - toFetch.length;
+
+    send({ type: 'start', total: toFetch.length, already });
+    if (!toFetch.length) { send({ type: 'done', done: 0, total: 0 }); return res.end(); }
+
+    let done = 0;
+    const CONCURRENCY = 4;
+    for (let i = 0; i < toFetch.length; i += CONCURRENCY) {
+      if (res.writableEnded) break;
+      const batch = toFetch.slice(i, i + CONCURRENCY);
+      await Promise.all(batch.map(date =>
+        fetchDailyData(date)
+          .then(result => { saveData(date, result); })
+          .catch(() => {/* skip days with no AAFM data (holidays, etc.) */})
+          .finally(() => { done++; send({ type: 'progress', done, total: toFetch.length, date }); })
+      ));
+    }
+
+    // Recalculate monthly summaries from newly cached data
+    for (let i = months; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear(), m = d.getMonth() + 1;
+      const ym = `${y}-${String(m).padStart(2,'0')}`;
+      const summary = calcMonthlySummary(y, m);
+      if (summary.daysCount > 0) saveMonthly(ym, summary);
+    }
+
+    send({ type: 'done', done, total: toFetch.length });
+  } catch (err) {
+    send({ type: 'error', message: err.message });
+  }
+  res.end();
+});
+
 // POST /api/recalc-history  — recalculate stored monthly summaries from cache
 app.post('/api/recalc-history', (req, res) => {
   const now = new Date();

@@ -352,7 +352,7 @@
   <div class="chart-box">
     <div class="chart-header">
       <h3>Flujo Neto Mensual — Últimos 12 meses</h3>
-      <button class="btn-outline" onclick="recalcHistory()" style="font-size:.78rem;padding:5px 12px">↺ Recalcular</button>
+      <button class="btn-outline" id="btnBackfill" onclick="backfillHistory()" style="font-size:.78rem;padding:5px 12px">⬇ Cargar historial</button>
     </div>
     <div class="chart-wrap"><canvas id="histChart"></canvas></div>
     <div class="chart-legend">
@@ -869,16 +869,44 @@ function downloadHistExcel() {
   XLSX.writeFile(wb, `FFMM_Historico_Mensual_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-async function recalcHistory() {
-  setStatus('Recalculando historial desde caché…', 'loading');
-  try {
-    const r = await api('/api/recalc-history', { method: 'POST' });
-    setStatus(`Historial recalculado: ${r.recalculated} meses actualizados.`);
-    histData = await api('/api/monthly-history?months=12');
-    renderHistTable();
-    buildHistChart();
-    renderHistCards();
-  } catch(e) { setStatus('Error: ' + e.message, 'error'); }
+function backfillHistory() {
+  const btn = document.getElementById('btnBackfill');
+  btn.disabled = true;
+  btn.textContent = '⏳ Cargando…';
+  setStatus('Conectando con AAFM para cargar historial…', 'loading');
+
+  const es = new EventSource('/api/backfill?months=12');
+
+  es.onmessage = async (e) => {
+    const d = JSON.parse(e.data);
+    if (d.type === 'start') {
+      if (d.total === 0) {
+        setStatus(`Historial ya estaba completo (${d.already} días en caché).`);
+      } else {
+        setStatus(`Cargando ${d.total} días desde AAFM (${d.already} ya en caché)…`, 'loading');
+      }
+    } else if (d.type === 'progress') {
+      setStatus(`Descargando historial: ${d.done}/${d.total} días… (${d.date})`, 'loading');
+    } else if (d.type === 'done') {
+      es.close();
+      btn.disabled = false;
+      btn.textContent = '⬇ Cargar historial';
+      setStatus(`Historial cargado: ${d.done} días descargados desde AAFM.`);
+      await loadHistory();
+    } else if (d.type === 'error') {
+      es.close();
+      btn.disabled = false;
+      btn.textContent = '⬇ Cargar historial';
+      setStatus('Error cargando historial: ' + d.message, 'error');
+    }
+  };
+
+  es.onerror = () => {
+    es.close();
+    btn.disabled = false;
+    btn.textContent = '⬇ Cargar historial';
+    setStatus('Error de conexión al cargar historial.', 'error');
+  };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
