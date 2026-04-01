@@ -287,6 +287,7 @@
   <div class="nav-tab active" onclick="showTab('diario')">Aportes y Rescates</div>
   <div class="nav-tab" onclick="showTab('mensual')">Acumulado Mensual</div>
   <div class="nav-tab" onclick="showTab('historico')">Histórico Anual</div>
+  <div class="nav-tab" onclick="showTab('bci')">Cartolas BCI</div>
 </div>
 
 <!-- CONTROLS -->
@@ -386,6 +387,20 @@
   </div>
 </div>
 
+<!-- ─── PÁGINA BCI ──────────────────────────────────────────────────────── -->
+<div class="page" id="page-bci">
+  <div id="bci-sync-bar" style="padding:10px 20px;font-size:.8rem;color:var(--text2);border-bottom:1px solid var(--border);background:var(--bg);display:flex;gap:16px;align-items:center;">
+    <span>📅 <b>Última actualización:</b> <span id="bci-sync-date">—</span></span>
+    <span>📎 <span id="bci-source" style="font-family:monospace"></span></span>
+  </div>
+
+  <!-- Tabs por sociedad -->
+  <div id="bci-soc-tabs" style="display:flex;gap:0;background:var(--bg);border-bottom:1px solid var(--border);padding:0 20px;overflow-x:auto;"></div>
+
+  <!-- Contenido dinámico -->
+  <div id="bci-content" style="padding:20px;"></div>
+</div>
+
 <footer>Datos obtenidos desde <a href="https://estadisticas2.aafm.cl/DailyStadistics" target="_blank">AAFM — Asociación de Fondos Mutuos</a></footer>
 
 <script>
@@ -439,11 +454,13 @@ function toggleDark() {
 
 // ─── Tabs ──────────────────────────────────────────────────────────────────
 function showTab(name) {
+  const TABS = ['diario','mensual','historico','bci'];
   document.querySelectorAll('.nav-tab').forEach((t, i) =>
-    t.classList.toggle('active', ['diario','mensual','historico'][i] === name));
+    t.classList.toggle('active', TABS[i] === name));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (name === 'historico') loadHistory();
+  if (name === 'bci') loadBCI();
 }
 
 // ─── Daily ─────────────────────────────────────────────────────────────────
@@ -927,6 +944,276 @@ function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString('es-CL',{d
 function fmtDateDisplay(iso) { return iso ? new Date(iso+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}) : ''; }
 function isoOffset(days) { const d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().split('T')[0]; }
 function setStatus(msg, type='') { const b=document.getElementById('status'); b.textContent=msg; b.className='status'+(type?' '+type:''); }
+
+// ─── BCI Cartolas ───────────────────────────────────────────────────────────
+let bciData = null;
+let bciActiveSoc = 0;
+
+async function loadBCI() {
+  if (bciData) { renderBCI(); return; }
+  document.getElementById('bci-content').innerHTML = '<p style="padding:20px;color:var(--text2)">Cargando cartolas...</p>';
+  try {
+    const resp = await fetch('/api/bci?_=' + Date.now());
+    if (!resp.ok) throw new Error('Sin datos');
+    bciData = await resp.json();
+    renderBCI();
+  } catch(e) {
+    document.getElementById('bci-content').innerHTML =
+      '<p style="padding:20px;color:#e53935">No hay datos BCI disponibles. Ejecuta el sync primero.</p>';
+  }
+}
+
+function renderBCI() {
+  if (!bciData) return;
+  const d = bciData;
+
+  // Sync bar
+  document.getElementById('bci-sync-date').textContent =
+    d.sync_at ? new Date(d.sync_at).toLocaleString('es-CL') : '—';
+  document.getElementById('bci-source').textContent = d.fuente || '';
+
+  // Sociedad tabs
+  const tabsEl = document.getElementById('bci-soc-tabs');
+  tabsEl.innerHTML = d.sociedades.map((s, i) => `
+    <div onclick="bciSelectSoc(${i})" id="bci-soc-tab-${i}" style="
+      padding:10px 18px;cursor:pointer;font-size:.85rem;font-weight:500;
+      border-bottom:3px solid ${i===bciActiveSoc?'var(--primary)':'transparent'};
+      color:${i===bciActiveSoc?'var(--primary)':'var(--text2)'};white-space:nowrap">
+      ${s.cliente.split(' ').slice(0,3).join(' ')}<br>
+      <span style="font-size:.75rem;font-weight:400">${s.rut}</span>
+    </div>`).join('');
+
+  renderBCISoc(bciActiveSoc);
+}
+
+function bciSelectSoc(i) {
+  bciActiveSoc = i;
+  document.querySelectorAll('[id^="bci-soc-tab-"]').forEach((el, j) => {
+    el.style.borderBottomColor = j===i ? 'var(--primary)' : 'transparent';
+    el.style.color = j===i ? 'var(--primary)' : 'var(--text2)';
+  });
+  renderBCISoc(i);
+}
+
+function renderBCISoc(i) {
+  const s = bciData.sociedades[i];
+  const el = document.getElementById('bci-content');
+  const clp = s.patrimonio_clp;
+  const uf  = s.patrimonio_uf;
+  const usd = s.patrimonio_usd;
+
+  const pctBar = (val, total) => {
+    if (!total) return '';
+    const pct = Math.abs(val/total*100).toFixed(1);
+    const color = val >= 0 ? 'var(--primary)' : '#e53935';
+    return `<div style="height:6px;background:var(--border);border-radius:3px;margin-top:4px">
+      <div style="height:6px;width:${Math.min(pct,100)}%;background:${color};border-radius:3px"></div></div>`;
+  };
+
+  const totalAbs = Math.abs(s.caja)+Math.abs(s.renta_variable)+Math.abs(s.renta_fija)+Math.abs(s.op_liquidar);
+
+  el.innerHTML = `
+  <!-- Patrimonio total -->
+  <div class="cards" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-label">Patrimonio CLP</div>
+      <div class="card-val" style="font-size:1.3rem">${fmtCLP(clp)}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Patrimonio UF</div>
+      <div class="card-val">${uf.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Patrimonio USD</div>
+      <div class="card-val">${usd.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Fecha Cartola</div>
+      <div class="card-val" style="font-size:1rem">${s.fecha}</div>
+    </div>
+  </div>
+
+  <!-- Breakdown activos -->
+  <div class="table-box" style="margin-bottom:20px">
+    <div class="table-toolbar"><span style="font-size:.88rem;font-weight:600">Resumen por Producto</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;padding:16px">
+      ${[
+        ['Caja', s.caja],
+        ['Renta Variable', s.renta_variable],
+        ['Renta Fija', s.renta_fija],
+        ['Op. por Liquidar', s.op_liquidar],
+      ].map(([label, val]) => `
+        <div style="background:var(--bg2);border-radius:8px;padding:14px;border:1px solid var(--border)">
+          <div style="font-size:.78rem;color:var(--text2)">${label}</div>
+          <div style="font-size:1.05rem;font-weight:600;color:${val<0?'#e53935':'var(--text)'}">
+            $${fmtCLP(val)}</div>
+          ${pctBar(val, totalAbs)}
+          <div style="font-size:.72rem;color:var(--text2);margin-top:4px">${fmtMM(val)} MM</div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  ${s.acciones.length ? `
+  <div class="table-box" style="margin-bottom:20px">
+    <div class="table-toolbar"><span style="font-size:.88rem;font-weight:600">Acciones (${s.acciones.length})</span></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Nombre</th><th>Sector</th>
+          <th style="text-align:right">En Garantía</th><th style="text-align:right">A Plazo</th>
+          <th style="text-align:right">Px Compra</th><th style="text-align:right">Px Último</th>
+          <th style="text-align:right">Var%</th>
+          <th style="text-align:right">Valor Mercado</th><th style="text-align:right">Dividendos</th>
+        </tr></thead>
+        <tbody>
+          ${s.acciones.map(a => {
+            const varPct = a.precio_compra ? ((a.precio_ultimo-a.precio_compra)/a.precio_compra*100) : 0;
+            const varColor = varPct >= 0 ? 'var(--success)' : '#e53935';
+            return `<tr>
+              <td><b>${a.ticker}</b></td>
+              <td>${a.nombre}</td>
+              <td style="font-size:.8rem;color:var(--text2)">${a.sector}</td>
+              <td style="text-align:right">${fmtCLP(a.en_garantia)}</td>
+              <td style="text-align:right">${fmtCLP(a.a_plazo)}</td>
+              <td style="text-align:right">${a.precio_compra.toLocaleString('es-CL',{maximumFractionDigits:4})}</td>
+              <td style="text-align:right">${a.precio_ultimo.toLocaleString('es-CL',{maximumFractionDigits:4})}</td>
+              <td style="text-align:right;color:${varColor}">${varPct>=0?'+':''}${varPct.toFixed(2)}%</td>
+              <td style="text-align:right;font-weight:600">$${fmtCLP(a.valor_mercado)}</td>
+              <td style="text-align:right">${fmtCLP(a.dividendos)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+        <tfoot><tr>
+          <td colspan="8" style="text-align:right;font-weight:600">Total Acciones</td>
+          <td style="text-align:right;font-weight:600">$${fmtCLP(s.acciones.reduce((sum,a)=>sum+a.valor_mercado,0))}</td>
+          <td style="text-align:right;font-weight:600">$${fmtCLP(s.acciones.reduce((sum,a)=>sum+a.dividendos,0))}</td>
+        </tr></tfoot>
+      </table>
+    </div>
+  </div>` : ''}
+
+  <!-- CFI -->
+  ${s.cfi.length ? `
+  <div class="table-box" style="margin-bottom:20px">
+    <div class="table-toolbar"><span style="font-size:.88rem;font-weight:600">CFI — Cuotas de Fondos (${s.cfi.length})</span></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Ticker</th><th>Nombre</th>
+          <th style="text-align:right">Cantidad</th>
+          <th style="text-align:right">Px Compra</th><th style="text-align:right">Px Último</th>
+          <th style="text-align:right">Var%</th>
+          <th style="text-align:right">Valor Mercado</th><th style="text-align:right">Dividendos</th>
+        </tr></thead>
+        <tbody>
+          ${s.cfi.map(a => {
+            const varPct = a.precio_compra ? ((a.precio_ultimo-a.precio_compra)/a.precio_compra*100) : 0;
+            const varColor = varPct >= 0 ? 'var(--success)' : '#e53935';
+            const qty = a.libre + a.en_garantia + a.a_plazo;
+            return `<tr>
+              <td><b>${a.ticker}</b></td>
+              <td>${a.nombre}</td>
+              <td style="text-align:right">${fmtCLP(qty)}</td>
+              <td style="text-align:right">${a.precio_compra.toLocaleString('es-CL',{maximumFractionDigits:4})}</td>
+              <td style="text-align:right">${a.precio_ultimo.toLocaleString('es-CL',{maximumFractionDigits:4})}</td>
+              <td style="text-align:right;color:${varColor}">${varPct>=0?'+':''}${varPct.toFixed(2)}%</td>
+              <td style="text-align:right;font-weight:600">$${fmtCLP(a.valor_mercado)}</td>
+              <td style="text-align:right">${fmtCLP(a.dividendos)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>` : ''}
+
+  <!-- Simultáneas -->
+  ${s.simultaneas.length ? `
+  <div class="table-box" style="margin-bottom:20px">
+    <div class="table-toolbar">
+      <span style="font-size:.88rem;font-weight:600">Simultáneas Vigentes (${s.simultaneas.length})</span>
+      <span style="font-size:.82rem;color:var(--text2)">Resultado total: <b style="color:${s.total_simultaneas_resultado>=0?'var(--success)':'#e53935'}">$${fmtCLP(s.total_simultaneas_resultado)}</b></span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Instrumento</th><th style="text-align:right">Cantidad</th>
+          <th style="text-align:right">Plazo</th><th style="text-align:right">Tasa</th>
+          <th>Venta Contado</th>
+          <th style="text-align:right">Monto</th>
+          <th style="text-align:right">Valor Mercado</th>
+          <th style="text-align:right">Resultado</th>
+        </tr></thead>
+        <tbody>
+          ${s.simultaneas.map(sim => `<tr>
+            <td><b>${sim.instrumento}</b></td>
+            <td style="text-align:right">${fmtCLP(sim.cantidad)}</td>
+            <td style="text-align:right">${sim.plazo_dias}d</td>
+            <td style="text-align:right">${sim.tasa.toFixed(2)}%</td>
+            <td>${sim.fecha_venta_contado}</td>
+            <td style="text-align:right">$${fmtCLP(sim.monto)}</td>
+            <td style="text-align:right">$${fmtCLP(sim.valor_mercado)}</td>
+            <td style="text-align:right;color:${sim.resultado>=0?'var(--success)':'#e53935'};font-weight:600">
+              ${sim.resultado>=0?'+':''}$${fmtCLP(sim.resultado)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>` : ''}
+
+  <!-- Forwards -->
+  ${s.forwards.length ? `
+  <div class="table-box" style="margin-bottom:20px">
+    <div class="table-toolbar">
+      <span style="font-size:.88rem;font-weight:600">Forwards Vigentes (${s.forwards.length})</span>
+      <span style="font-size:.82rem;color:var(--text2)">Resultado total: <b style="color:${s.total_forwards_resultado>=0?'var(--success)':'#e53935'}">$${fmtCLP(s.total_forwards_resultado)}</b></span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Folio</th><th>Tipo</th><th>Moneda</th>
+          <th style="text-align:right">Nominal</th><th>Inicio</th>
+          <th style="text-align:right">Plazo</th><th style="text-align:right">TC Cierre</th>
+          <th style="text-align:right">Resultado FWD</th><th style="text-align:right">Valor Razonable</th>
+        </tr></thead>
+        <tbody>
+          ${s.forwards.map(f => `<tr>
+            <td>${f.folio}</td>
+            <td>${f.tipo}</td>
+            <td>${f.moneda}</td>
+            <td style="text-align:right">${fmtCLP(f.monto_nominal)}</td>
+            <td>${f.fecha_inicio}</td>
+            <td style="text-align:right">${f.plazo_total}d</td>
+            <td style="text-align:right">${f.tc_cierre ? f.tc_cierre.toLocaleString('es-CL',{maximumFractionDigits:6}) : '—'}</td>
+            <td style="text-align:right;color:${f.resultado_fwd>=0?'var(--success)':'#e53935'};font-weight:600">
+              ${f.resultado_fwd>=0?'+':''}$${fmtCLP(f.resultado_fwd)}</td>
+            <td style="text-align:right;color:${f.valor_razonable>=0?'var(--success)':'#e53935'};font-weight:600">
+              ${f.valor_razonable>=0?'+':''}$${fmtCLP(f.valor_razonable)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>` : ''}
+
+  <!-- Flujos proyectados -->
+  ${Object.keys(s.flujos||{}).length ? `
+  <div class="table-box" style="margin-bottom:20px">
+    <div class="table-toolbar"><span style="font-size:.88rem;font-weight:600">Flujos Proyectados</span></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Producto</th><th style="text-align:right">0–30 días</th><th style="text-align:right">31–90 días</th></tr></thead>
+        <tbody>
+          ${Object.entries(s.flujos).filter(([,v])=>v['0_30']||v['31_90']).map(([k,v])=>`<tr>
+            <td>${k}</td>
+            <td style="text-align:right;color:${v['0_30']>=0?'var(--success)':'#e53935'}">${v['0_30']>=0?'+':''}$${fmtCLP(v['0_30'])}</td>
+            <td style="text-align:right;color:${v['31_90']>=0?'var(--success)':'#e53935'}">${v['31_90']>=0?'+':''}$${fmtCLP(v['31_90'])}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>` : ''}
+  `;
+}
 </script>
 </body>
 </html>

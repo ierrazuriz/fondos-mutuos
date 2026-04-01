@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { spawn } = require('child_process');
 const { fetchDailyData } = require('./scraper');
-const { getCachedData, saveData, listDates, saveMonthly, getMonthly, getMonthlyHistory } = require('./db');
+const { getCachedData, saveData, listDates, saveMonthly, getMonthly, getMonthlyHistory, getLatestBci, saveBci } = require('./db');
 
 const DEFAULT_CATS = [
   'Accionario Nacional',
@@ -204,6 +205,83 @@ app.post('/api/recalc-history', (req, res) => {
   res.json({ recalculated: results.length, results });
 });
 
+// ─── BCI API ──────────────────────────────────────────────────────────────
+app.get('/api/bci', (_req, res) => {
+  const data = getLatestBci();
+  if (!data) return res.status(404).json({ error: 'Sin datos BCI. Ejecuta el sync.' });
+  res.json(data);
+});
+
+app.post('/api/bci/sync', (_req, res) => {
+  runBciSync();
+  res.json({ status: 'started' });
+});
+
+// ─── BCI Sync Runner ──────────────────────────────────────────────────────
+function runBciSync() {
+  const env = { ...process.env };
+  // Si no hay token en env, leer del archivo local como fallback
+  if (!env.GOOGLE_TOKEN_JSON) {
+    const tokenPath = path.join(__dirname, '..', 'bci-cartolas', 'token.json');
+    const fs = require('fs');
+    if (fs.existsSync(tokenPath)) {
+      env.GOOGLE_TOKEN_JSON = fs.readFileSync(tokenPath, 'utf8');
+    }
+  }
+
+  const script = path.join(__dirname, 'bci_sync.py');
+  const proc = spawn('python', [script], { env });
+  let stdout = '';
+
+  proc.stdout.on('data', (d) => {
+    const line = d.toString();
+    stdout += line;
+    process.stdout.write('[bci] ' + line);
+  });
+  proc.stderr.on('data', (d) => process.stderr.write('[bci] ' + d));
+  proc.on('close', (code) => {
+    if (code !== 0) {
+      console.error(`[bci] sync failed (exit ${code})`);
+      return;
+    }
+    // Extraer datos del output y guardar en DB (ya lo hace el propio script,
+    // pero si queremos el token actualizado lo capturamos aquí)
+    const tokenLine = stdout.split('\n').find(l => l.startsWith('UPDATED_TOKEN:'));
+    if (tokenLine) {
+      const newToken = tokenLine.slice('UPDATED_TOKEN:'.length);
+      console.log('[bci] Token renovado');
+      // En Railway, logear para que el operador actualice la env var manualmente si es necesario
+      // No imprimimos el token completo por seguridad
+    }
+    console.log('[bci] sync completado');
+  });
+}
+
+// ─── Cron BCI: L-V a las 09:30 hora Chile (UTC-3 = 12:30 UTC) ────────────
+function scheduleBciCron() {
+  function msUntilNext(h, m) {
+    const now = new Date();
+    const target = new Date();
+    target.setUTCHours(h, m, 0, 0);
+    if (target <= now) target.setUTCDate(target.getUTCDate() + 1);
+    return target - now;
+  }
+
+  function tick() {
+    const day = new Date().getUTCDay(); // 0=Dom 6=Sab
+    if (day >= 1 && day <= 5) {
+      console.log('[bci] Cron disparo: iniciando sync...');
+      runBciSync();
+    }
+    // Próxima ejecución en 24h
+    setTimeout(tick, 24 * 60 * 60 * 1000);
+  }
+
+  const ms = msUntilNext(12, 30); // 12:30 UTC = 09:30 CLT
+  console.log(`[bci] Próximo sync en ${Math.round(ms/60000)} min`);
+  setTimeout(tick, ms);
+}
+
 // ─── Startup ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -238,4 +316,12 @@ app.listen(PORT, () => {
     if (summary.daysCount > 0) { saveMonthly(ym, summary); saved++; }
   }
   if (saved) console.log(`[startup] Monthly history: ${saved} months stored`);
+
+  // BCI cron
+  scheduleBciCron();
+  // Si no hay datos BCI aún, sincronizar al arrancar
+  if (!getLatestBci()) {
+    console.log('[bci] Sin datos previos, sincronizando al inicio...');
+    runBciSync();
+  }
 });

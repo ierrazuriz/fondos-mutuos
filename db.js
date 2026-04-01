@@ -62,4 +62,32 @@ function getMonthlyHistory(months = 12) {
   `).all(months).reverse(); // oldest first for chart
 }
 
-module.exports = { getCachedData, saveData, listDates, saveMonthly, getMonthly, getMonthlyHistory };
+// ─── BCI Cartolas ─────────────────────────────────────────────────────────
+function ensureBciTable() {
+  getDB().exec(`
+    CREATE TABLE IF NOT EXISTS bci_cartolas (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      synced_at TEXT NOT NULL,
+      fuente    TEXT,
+      data      TEXT NOT NULL
+    )
+  `);
+}
+
+function getLatestBci() {
+  ensureBciTable();
+  const row = getDB().prepare(
+    'SELECT data, synced_at, fuente FROM bci_cartolas ORDER BY id DESC LIMIT 1'
+  ).get();
+  if (!row) return null;
+  return JSON.parse(row.data);
+}
+
+function saveBci(synced_at, fuente, data) {
+  ensureBciTable();
+  getDB().prepare(
+    'INSERT INTO bci_cartolas (synced_at, fuente, data) VALUES (?,?,?)'
+  ).run(synced_at, fuente, JSON.stringify(data));
+}
+
+module.exports = { getCachedData, saveData, listDates, saveMonthly, getMonthly, getMonthlyHistory, getLatestBci, saveBci };
