@@ -28,13 +28,7 @@ TOKEN_ENV_VAR = 'GOOGLE_TOKEN_JSON'
 def get_creds():
     token_json = os.environ.get(TOKEN_ENV_VAR)
     if not token_json:
-        # fallback: archivo local (desarrollo)
-        local = os.path.join(os.path.dirname(__file__), '..', 'bci-cartolas', 'token.json')
-        if os.path.exists(local):
-            with open(local) as f:
-                token_json = f.read()
-        else:
-            raise RuntimeError(f'Variable de entorno {TOKEN_ENV_VAR} no definida y no existe token local.')
+        raise RuntimeError(f'Variable de entorno {TOKEN_ENV_VAR} no definida.')
 
     tmp = tempfile.NamedTemporaryFile(suffix='.json', delete=False, mode='w')
     tmp.write(token_json)

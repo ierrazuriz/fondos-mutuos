@@ -219,41 +219,22 @@ app.post('/api/bci/sync', (_req, res) => {
 
 // ─── BCI Sync Runner ──────────────────────────────────────────────────────
 function runBciSync() {
-  const env = { ...process.env };
-  // Si no hay token en env, leer del archivo local como fallback
-  if (!env.GOOGLE_TOKEN_JSON) {
-    const tokenPath = path.join(__dirname, '..', 'bci-cartolas', 'token.json');
-    const fs = require('fs');
-    if (fs.existsSync(tokenPath)) {
-      env.GOOGLE_TOKEN_JSON = fs.readFileSync(tokenPath, 'utf8');
-    }
+  if (!process.env.GOOGLE_TOKEN_JSON) {
+    console.warn('[bci] GOOGLE_TOKEN_JSON no definida, sync omitido');
+    return;
   }
 
   const script = path.join(__dirname, 'bci_sync.py');
-  const proc = spawn('python', [script], { env });
-  let stdout = '';
+  // En Linux (Railway) el binario es python3; en Windows puede ser python
+  const pythonBin = process.platform === 'win32' ? 'python' : 'python3';
+  const proc = spawn(pythonBin, [script], { env: process.env });
 
-  proc.stdout.on('data', (d) => {
-    const line = d.toString();
-    stdout += line;
-    process.stdout.write('[bci] ' + line);
-  });
+  proc.stdout.on('data', (d) => process.stdout.write('[bci] ' + d));
   proc.stderr.on('data', (d) => process.stderr.write('[bci] ' + d));
+  proc.on('error', (e) => console.error('[bci] spawn error:', e.message));
   proc.on('close', (code) => {
-    if (code !== 0) {
-      console.error(`[bci] sync failed (exit ${code})`);
-      return;
-    }
-    // Extraer datos del output y guardar en DB (ya lo hace el propio script,
-    // pero si queremos el token actualizado lo capturamos aquí)
-    const tokenLine = stdout.split('\n').find(l => l.startsWith('UPDATED_TOKEN:'));
-    if (tokenLine) {
-      const newToken = tokenLine.slice('UPDATED_TOKEN:'.length);
-      console.log('[bci] Token renovado');
-      // En Railway, logear para que el operador actualice la env var manualmente si es necesario
-      // No imprimimos el token completo por seguridad
-    }
-    console.log('[bci] sync completado');
+    if (code !== 0) console.error(`[bci] sync failed (exit ${code})`);
+    else console.log('[bci] sync completado');
   });
 }
 
