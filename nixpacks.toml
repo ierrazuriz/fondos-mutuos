@@ -1,10 +1,10 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python312", "python312Packages.pip"]
+nixPkgs = ["nodejs_20", "python3", "python3Packages.pip"]
 
 [phases.install]
 cmds = [
   "npm install",
-  "pip install google-auth google-auth-oauthlib google-api-python-client pdfplumber"
+  "pip3 install --break-system-packages google-auth google-auth-oauthlib google-api-python-client pdfplumber"
 ]
 
 [start]
