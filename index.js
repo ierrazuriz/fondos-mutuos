@@ -82,6 +82,9 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
+// GET / — health check for Railway
+app.get('/', (_req, res) => res.json({ status: 'ok', service: 'ffmm-backend' }));
+
 // GET /api/daily?date=YYYY-MM-DD
 app.get('/api/daily', async (req, res) => {
   const date = req.query.date || getYesterday();
@@ -276,20 +279,22 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 
-  // Pre-warm today's cache
+  // Pre-warm today's cache — deferred 2s so Railway health check passes first
   const yesterday = getYesterday();
   if (!getCachedData(yesterday)) {
-    console.log(`[startup] Fetching ${yesterday} from AAFM...`);
-    fetchDailyData(yesterday)
-      .then((result) => {
-        saveData(yesterday, result);
-        console.log(`[startup] Cached ${result.rows.length} fondos for ${yesterday}`);
-        // Update current month summary
-        const [y, m] = yesterday.split('-').map(Number);
-        const s = calcMonthlySummary(y, m);
-        if (s.daysCount > 0) saveMonthly(`${y}-${String(m).padStart(2,'0')}`, s);
-      })
-      .catch((err) => console.error('[startup] Fetch failed:', err.message));
+    setTimeout(() => {
+      console.log(`[startup] Fetching ${yesterday} from AAFM...`);
+      fetchDailyData(yesterday)
+        .then((result) => {
+          saveData(yesterday, result);
+          console.log(`[startup] Cached ${result.rows.length} fondos for ${yesterday}`);
+          // Update current month summary
+          const [y, m] = yesterday.split('-').map(Number);
+          const s = calcMonthlySummary(y, m);
+          if (s.daysCount > 0) saveMonthly(`${y}-${String(m).padStart(2,'0')}`, s);
+        })
+        .catch((err) => console.error('[startup] Fetch failed:', err.message));
+    }, 2000);
   } else {
     console.log(`[startup] Cache warm for ${yesterday}`);
   }
