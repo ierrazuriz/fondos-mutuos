@@ -3,933 +3,350 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Aportes y Rescates FFMM</title>
+  <title>EMF Apps</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
-    :root {
-      --primary: #f26439;
-      --primary-dark: #d73d26;
-      --success: #219c4a;
-      --bg: #fff;
-      --bg2: #fafafa;
-      --text: #333;
-      --text2: #666;
-      --border: #e0e0e0;
-      --hover-row: #fff5f2;
-      --hover-text: #f26439;
-      --last-reg: #fff0e6;
-      --th-bg: #f26439;
-    }
-    .dark-mode {
-      --bg: #1a1a1a;
-      --bg2: #222;
-      --text: #fff;
-      --text2: #aaa;
-      --border: #444;
-      --hover-row: #2a1a14;
-      --hover-text: #f26439;
-      --last-reg: #2a1a10;
-      --th-bg: #d73d26;
-    }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg2); color: var(--text); font-size: 14px; transition: background .2s, color .2s; }
+    :root{--primary:#f26439;--primary-dark:#d73d26;--success:#219c4a;--bg:#fff;--bg2:#fafafa;--text:#333;--text2:#666;--border:#e0e0e0;--hover-row:#fff5f2;--hover-text:#f26439;--last-reg:#fff0e6;--th-bg:#f26439}
+    .dark-mode{--bg:#1a1a1a;--bg2:#222;--text:#fff;--text2:#aaa;--border:#444;--hover-row:#2a1a10;--hover-text:#ff8c69;--last-reg:#2a1a10;--th-bg:#d73d26}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-width:1200px;transition:background .3s,color .3s}
+    #app{max-width:1600px;margin:0 auto;padding:0 20px 40px}
+    .header{display:flex;align-items:center;justify-content:center;padding:20px 0 10px}
+    .header img{height:60px}
+    .nav{background:var(--primary);display:flex;align-items:center;padding:0 20px;gap:0;position:sticky;top:0;z-index:100;min-width:1200px;margin:0 -20px}
+    .nav-tab{background:none;border:2px solid transparent;border-radius:6px 6px 0 0;color:#fff;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;padding:12px 20px;transition:all .3s}
+    .nav-tab.active,.nav-tab:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3)}
+    .nav-spacer{flex:1}
+    .dark-toggle{align-items:center;color:#fff;display:flex;font-size:13px;font-weight:500;gap:8px;margin-right:10px}
+    .toggle-switch{background:#ccc;border-radius:12px;cursor:pointer;display:inline-block;height:24px;position:relative;transition:background .3s;width:44px}
+    .toggle-switch input{display:none}
+    .toggle-switch .slider{background:#fff;border-radius:50%;height:18px;left:3px;position:absolute;top:3px;transition:.3s;width:18px}
+    input:checked+.slider{transform:translateX(20px)}
+    .toggle-switch:has(input:checked){background:var(--primary)}
+    .ayr-content,.balance-content{padding:20px 0}
+    .hidden{display:none!important}
+    .update-buttons{align-items:flex-start;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:0}
+    .update-single-section,.update-from-section{display:flex;flex-direction:column;gap:4px}
+    .update-single-section label,.update-from-section label{color:var(--text2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+    .datepicker-with-button{display:flex;align-items:center;gap:8px}
+    .update-button-compact{background:var(--primary);border:none;border-radius:6px;color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;transition:all .3s;white-space:nowrap}
+    .update-button-compact:hover{background:var(--primary-dark);transform:translateY(-1px)}
+    .update-button-compact.processing{opacity:.7;cursor:not-allowed}
+    .datepicker{border:2px solid var(--border);border-radius:6px;color:var(--text);background:var(--bg);font-family:inherit;font-size:13px;padding:6px 10px;transition:border .3s;height:34px}
+    .datepicker:focus{border-color:var(--primary);outline:none}
+    .last-update{align-items:center;display:flex;font-size:12px;height:40px;margin:0;gap:6px}
+    .last-update-icon{color:var(--primary);font-size:16px}
+    .pagination-container{display:flex;justify-content:space-between;align-items:center;margin:35px 0 10px;min-width:1200px;width:100%}
+    .pagination{align-items:center;display:flex;gap:4px;flex-wrap:wrap}
+    .pagination button{background-color:#fff;border:2px solid #f26439;border-radius:4px;color:#f26439;cursor:pointer;font-weight:600;padding:6px 10px;transition:all .3s ease;font-family:inherit;font-size:13px}
+    .pagination button.active,.pagination button:hover:not(.active){background-color:#f26439;color:#fff}
+    .action-buttons{display:flex;align-items:center;gap:8px}
+    .table-container{display:flex;flex-direction:column;width:fit-content}
+    .table-charts-wrapper{min-width:1200px;width:fit-content}
+    .table-scroll-wrapper{overflow-x:auto;width:100%}
+    .data-table{border-collapse:collapse;font-size:13px;width:100%}
+    .data-table th{background:var(--th-bg);color:#fff;cursor:pointer;font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap;user-select:none}
+    .data-table th:hover{background:var(--primary-dark)}
+    .data-table td{border-bottom:1px solid var(--border);color:var(--text);padding:8px 12px;transition:background .2s}
+    .data-table tr:hover td{background:var(--hover-row);color:var(--hover-text)}
+    .data-table tr.last-registered td{background:var(--last-reg)}
+    .col-monto{text-align:right}
+    .charts-container{display:flex;flex-direction:column;gap:20px;margin-top:30px;min-width:1200px;width:100%}
+    .charts-container>div{background:var(--bg2);border:1px solid var(--border);border-radius:8px;height:280px;padding:16px}
+    .download-button{align-items:center;background:none;border:none;color:#219c4a;cursor:pointer;display:flex;justify-content:center;padding:8px 12px;transition:all .3s ease;font-size:20px}
+    .download-button:hover{color:#26e16b;transform:scale(1.1)}
+    .balance-acciones-loading{text-align:center;padding:20px;color:var(--text2)}
+    .balance-content{display:flex;flex-direction:column;gap:24px}
+    .balance-table-section{overflow-x:auto}
+    .balance-table{border-collapse:collapse;font-size:13px;min-width:900px;width:100%}
+    .balance-table th{background:var(--th-bg);color:#fff;cursor:pointer;font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap}
+    .balance-table td{border-bottom:1px solid var(--border);padding:8px 12px}
+    .balance-table .number{text-align:right}
+    .balance-table .negative{color:#e53935}
+    .balance-table .total-row td{background:var(--bg2);font-weight:700;border-top:2px solid var(--border)}
+    .edit-button{background:none;border:1px solid var(--border);border-radius:4px;color:var(--text2);cursor:pointer;font-size:12px;padding:2px 6px}
+    .edit-button:hover{background:var(--primary);border-color:var(--primary);color:#fff}
+    .delete-adjustment-button{background:none;border:1px solid #e53935;border-radius:4px;color:#e53935;cursor:pointer;font-size:12px;margin-left:4px;padding:2px 6px}
+    .delete-adjustment-button:hover{background:#e53935;color:#fff}
+    .edit-input-inline{border:1px solid var(--primary);border-radius:4px;color:var(--text);background:var(--bg);font-size:13px;padding:3px 6px;width:100px}
+    .edit-actions-inline{display:inline-flex;gap:4px;margin-left:4px}
+    .save-button-inline{background:var(--success);border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:14px;padding:2px 8px}
+    .cancel-button-inline{background:#e53935;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:14px;padding:2px 8px}
+    .balance-neteo-warning{background:#fff3cd;border:1px solid #ffc107;border-radius:6px;color:#856404;font-size:12px;padding:8px 12px;margin-bottom:8px}
+    .balance-error{background:#ffebee;border:1px solid #e53935;border-radius:6px;color:#c62828;font-size:12px;padding:8px 12px}
+    .upload-section{display:flex;gap:20px;flex-wrap:wrap}
+    .upload-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;flex:1;min-width:300px;padding:16px}
+    .upload-box h4{color:var(--text);font-size:13px;margin-bottom:10px}
+    .dropzone{align-items:center;border:2px dashed var(--border);border-radius:8px;color:var(--text2);cursor:pointer;display:flex;flex-direction:column;font-size:12px;gap:6px;min-height:80px;justify-content:center;padding:16px;text-align:center;transition:all .3s}
+    .dropzone:hover,.dropzone.dragover{background:var(--hover-row);border-color:var(--primary);color:var(--primary)}
+    .dropzone-icon{font-size:24px}
+    .dropzone input[type=file]{display:none}
+    .upload-error{color:#e53935;font-size:12px;margin-top:6px}
+    .historial-section{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px}
+    .historial-section h4{color:var(--text);font-size:13px;margin-bottom:10px}
+    .historial-empty{color:var(--text2);font-size:12px;text-align:center;padding:20px 0}
+    .historial-table{border-collapse:collapse;font-size:12px;width:100%}
+    .historial-table th{background:var(--th-bg);color:#fff;font-weight:600;padding:6px 10px;text-align:left}
+    .historial-table td{border-bottom:1px solid var(--border);padding:6px 10px}
+    .tipo-badge{border-radius:4px;font-size:11px;font-weight:600;padding:2px 8px}
+    .tipo-badge.csv{background:#e3f2fd;color:#1565c0}
+    .tipo-badge.balance_base{background:#e8f5e9;color:#2e7d32}
+    .delete-button{background:none;border:1px solid #e53935;border-radius:4px;color:#e53935;cursor:pointer;font-size:14px;padding:2px 8px}
+    .delete-button:hover{background:#e53935;color:#fff}
+    .historial-notification{background:var(--success);border-radius:6px;bottom:20px;color:#fff;font-size:13px;font-weight:600;opacity:0;padding:10px 18px;position:fixed;right:20px;transition:opacity .3s;z-index:9999}
+    .historial-notification.visible{opacity:1}
+    .historial-notification.error{background:#e53935}
+    .historial-confirm-dialog{background:var(--bg);border:2px solid var(--primary);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.2);max-width:400px;padding:20px;text-align:center}
+    .confirm-dialog-message{color:var(--text);font-size:14px;margin-bottom:16px}
+    .confirm-dialog-buttons{display:flex;gap:10px;justify-content:center}
+    .confirm-button{background:#e53935;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:14px;font-weight:600;padding:8px 20px}
+    .cancel-button{background:var(--bg2);border:2px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:14px;font-weight:600;padding:8px 20px}
+    .info-button{background:none;border:1px solid rgba(255,255,255,.5);border-radius:50%;color:#fff;cursor:pointer;font-size:11px;font-weight:700;height:20px;line-height:1;padding:0;width:20px}
+    .modal-overlay{align-items:center;background:rgba(0,0,0,.5);bottom:0;display:flex;justify-content:center;left:0;position:fixed;right:0;top:0;z-index:1000}
+    .modal-content{background:var(--bg);border-radius:8px;max-height:80vh;max-width:600px;overflow-y:auto;padding:24px;width:90%}
+    .modal-content h3{color:var(--primary);margin-bottom:12px}
+    .modal-content p{color:var(--text);font-size:13px;line-height:1.6;margin-bottom:8px}
+    .modal-content ul{color:var(--text);font-size:13px;list-style:disc;margin:8px 0 8px 20px}
+    .modal-close{float:right;font-size:20px;cursor:pointer;color:var(--text2);background:none;border:none}
+    .ops-modal{background:var(--bg);border-radius:8px;max-height:85vh;max-width:900px;overflow-y:auto;padding:24px;width:95%}
+    .ops-modal h3{color:var(--primary);margin-bottom:12px}
+    .ops-table{border-collapse:collapse;font-size:12px;width:100%}
+    .ops-table th{background:var(--th-bg);color:#fff;font-weight:600;padding:6px 10px;text-align:left}
+    .ops-table td{border-bottom:1px solid var(--border);padding:4px 6px}
+    .ops-table input{border:1px solid var(--border);border-radius:3px;font-size:12px;padding:2px 4px;width:100%;background:var(--bg);color:var(--text)}
+    .ops-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .add-row-button{background:var(--success);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px}
+    .save-button{background:var(--primary);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;font-weight:600;padding:8px 14px}
+    .sort-indicator{font-size:10px;margin-left:4px}
+    @media(max-width:1400px){body,#app{min-width:1200px}}
 
-    /* HEADER */
-    .header {
-      background: var(--bg);
-      border-bottom: 2px solid var(--primary);
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      gap: 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-title {
-      font-size: .95rem;
-      font-weight: 700;
-      color: var(--primary);
-      padding: 12px 0;
-      flex: 1;
-      letter-spacing: -.01em;
-    }
-    .header-actions { display: flex; align-items: center; gap: 10px; }
-    .dark-toggle {
-      background: none;
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-size: .8rem;
-      color: var(--text);
-      font-family: inherit;
-    }
-    .dark-toggle:hover { border-color: var(--primary); color: var(--primary); }
-
-    /* NAVBAR */
-    .navbar {
-      background: var(--primary);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      gap: 0;
-    }
-    .nav-tab {
-      min-width: 150px;
-      padding: 10px 18px;
-      color: rgba(255,255,255,.75);
-      font-weight: 500;
-      font-size: .88rem;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: .15s;
-      text-align: center;
-    }
-    .nav-tab:hover { color: #fff; }
-    .nav-tab.active { color: #fff; border-bottom-color: #fff; background: rgba(0,0,0,.1); }
-
-    /* CONTROLS */
-    .controls {
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      display: flex;
-      align-items: flex-end;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .ctrl-group { display: flex; flex-direction: column; gap: 5px; }
-    .ctrl-label { font-size: .73rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
-    input[type=date] {
-      padding: 7px 10px;
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      font-size: .85rem;
-      font-family: inherit;
-      background: var(--bg);
-      color: var(--text);
-    }
-    input[type=date]:focus { outline: none; border-color: var(--primary); }
-    .cat-checks { display: flex; flex-direction: column; gap: 4px; }
-    .cat-checks label { display: flex; align-items: center; gap: 7px; font-size: .82rem; cursor: pointer; color: var(--text); }
-    .cat-checks input[type=checkbox] { accent-color: var(--primary); width: 14px; height: 14px; }
-    .btn-group { display: flex; gap: 8px; align-items: center; }
-    button {
-      padding: 8px 18px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: .85rem;
-      font-weight: 600;
-      font-family: inherit;
-      transition: .15s;
-    }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-outline { background: var(--bg); color: var(--primary); border: 1.5px solid var(--primary); }
-    .btn-outline:hover { background: var(--primary); color: #fff; }
-    .btn-download { background: var(--bg); color: var(--success); border: 1.5px solid var(--success); }
-    .btn-download:hover { background: var(--success); color: #fff; transform: scale(1.04); }
-
-    /* STATUS */
-    .status {
-      padding: 6px 20px;
-      font-size: .78rem;
-      color: var(--text2);
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      min-height: 28px;
-    }
-    .status.loading { background: #fff8e1; color: #856404; }
-    .status.error { background: #fdecea; color: #c0392b; }
-    .dark-mode .status.loading { background: #332a00; color: #ffd54f; }
-    .dark-mode .status.error { background: #3b0000; color: #ff8a80; }
-
-    /* PAGE */
-    .page { display: none; padding: 16px 20px 32px; }
-    .page.active { display: block; }
-
-    /* CARDS */
-    .cards { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-    .card {
-      background: var(--bg);
-      border-radius: 8px;
-      padding: 14px 18px;
-      flex: 1;
-      min-width: 160px;
-      border-left: 4px solid var(--primary);
-      box-shadow: 0 1px 3px rgba(0,0,0,.07);
-    }
-    .card.c-green { border-color: #219c4a; }
-    .card.c-red { border-color: #e53935; }
-    .card.c-blue { border-color: #1976d2; }
-    .card .lbl { font-size: .7rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
-    .card .val { font-size: 1.3rem; font-weight: 700; margin-top: 4px; color: var(--text); }
-    .card .sub { font-size: .7rem; color: var(--text2); margin-top: 3px; }
-    .pos { color: #219c4a; }
-    .neg { color: #e53935; }
-
-    /* TABLE WRAPPER */
-    .table-box {
-      background: var(--bg);
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.07);
-      overflow: hidden;
-    }
-    .table-toolbar {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .search-input {
-      padding: 6px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      font-size: .83rem;
-      font-family: inherit;
-      background: var(--bg);
-      color: var(--text);
-      width: 260px;
-    }
-    .search-input:focus { outline: none; border-color: var(--primary); }
-    .row-count { font-size: .78rem; color: var(--text2); }
-    .table-scroll { overflow-x: auto; max-height: calc(100vh - 380px); }
-    table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 1200px; }
-    thead { position: sticky; top: 0; z-index: 1; }
-    th {
-      background: var(--th-bg);
-      color: #fff;
-      padding: 9px 12px;
-      text-align: left;
-      white-space: nowrap;
-      cursor: pointer;
-      user-select: none;
-      font-weight: 600;
-      font-size: .78rem;
-      letter-spacing: .02em;
-    }
-    th:hover { opacity: .9; }
-    th.asc::after { content: ' ↑'; }
-    th.desc::after { content: ' ↓'; }
-    td { padding: 7px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text); }
-    tr:hover td { background: var(--hover-row); color: var(--hover-text); }
-    tr.last-reg td { background: var(--last-reg); border-left: 3px solid var(--primary); }
-    tr:last-child td { border-bottom: none; }
-    .tfoot td { font-weight: 700; background: var(--bg2); border-top: 2px solid var(--border); color: var(--text); }
-    .tfoot tr:hover td { background: var(--bg2); color: var(--text); }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: .72rem;
-      font-weight: 600;
-      background: #fff0e6;
-      color: var(--primary);
-    }
-    .dark-mode .badge { background: #2a1a10; }
-    .empty-msg { text-align: center; padding: 32px; color: var(--text2); }
-
-    /* CHART */
-    .chart-box {
-      background: var(--bg);
-      border-radius: 8px;
-      padding: 16px 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.07);
-      margin-bottom: 16px;
-    }
-    .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .chart-header h3 { font-size: .9rem; font-weight: 600; color: var(--text); }
-    .chart-wrap { position: relative; height: 400px; }
-    .chart-legend { display: flex; gap: 16px; margin-top: 10px; justify-content: center; flex-wrap: wrap; font-size: .78rem; color: var(--text2); }
-    .chart-legend span { display: flex; align-items: center; gap: 5px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-
-    /* DAYS GRID */
-    .days-box { background: var(--bg); border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.07); }
-    .days-box h3 { font-size: .85rem; font-weight: 600; color: var(--text2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .4px; }
-    .days-grid { display: flex; flex-wrap: wrap; gap: 5px; }
-    .day-chip { padding: 3px 9px; border-radius: 4px; font-size: .72rem; font-weight: 500; }
-    .day-chip.loaded { background: #e8f5e9; color: #2e7d32; }
-    .day-chip.pending { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); }
-    .dark-mode .day-chip.loaded { background: #1b3a1f; color: #81c784; }
-
-    footer { text-align: center; padding: 12px; color: var(--text2); font-size: .75rem; border-top: 1px solid var(--border); background: var(--bg); }
-    footer a { color: var(--primary); text-decoration: none; }
   </style>
 </head>
 <body>
-
-<!-- HEADER -->
-<div class="header">
-  <svg width="38" height="30" viewBox="0 0 38 30" style="margin-right:10px;flex-shrink:0">
-    <rect width="38" height="30" rx="5" fill="#f26439"/>
-    <text x="19" y="20" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="12" fill="#fff" letter-spacing="1">EMF</text>
-  </svg>
-  <div class="header-title">Aportes y Rescates FFMM — Accionario Nacional</div>
-  <div class="header-actions">
-    <a href="https://estadisticas2.aafm.cl/DailyStadistics" target="_blank" rel="noopener"
-       style="font-size:.78rem;color:var(--text2);text-decoration:none">AAFM.cl ↗</a>
-    <button class="dark-toggle" onclick="toggleDark()">☀ / ☾</button>
-  </div>
-</div>
-
-<!-- NAVBAR -->
-<div class="navbar">
-  <div class="nav-tab active" onclick="showTab('diario')">Aportes y Rescates</div>
-  <div class="nav-tab" onclick="showTab('mensual')">Acumulado Mensual</div>
-  <div class="nav-tab" onclick="showTab('historico')">Histórico Anual</div>
-</div>
-
-<!-- CONTROLS -->
-<div class="controls">
-  <div class="ctrl-group">
-    <div class="ctrl-label">Fecha</div>
-    <input type="date" id="dateInput"/>
-  </div>
-  <div class="ctrl-group">
-    <div class="ctrl-label">Categorías AFM</div>
-    <div class="cat-checks" id="catChecks"></div>
-  </div>
-  <div class="btn-group" style="margin-bottom:2px">
-    <button class="btn-primary" onclick="loadDay()">Consultar</button>
-    <button class="btn-outline" onclick="refreshDay()">Actualizar</button>
-    <button class="btn-download" onclick="downloadExcel()">⬇ Descargar Excel</button>
-    <button class="btn-outline" id="btnBackfill" onclick="backfillHistory()" style="border-color:#1976d2;color:#1976d2">⬇ Cargar historial</button>
-  </div>
-</div>
-
-<div class="status" id="status">Cargando datos...</div>
-
-<!-- TAB: DIARIO -->
-<div class="page active" id="page-diario">
-  <div class="cards" id="cards"></div>
-  <div class="table-box">
-    <div class="table-toolbar">
-      <input class="search-input" type="text" id="searchBox" placeholder="Buscar fondo o administradora..." oninput="renderTable()"/>
-      <span class="row-count" id="rowCount"></span>
+  <div id="app">
+    <div class="header">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" height="60">
+        <rect x="5" y="5" width="22" height="22" rx="3" fill="#f26439"/>
+        <rect x="30" y="5" width="22" height="22" rx="3" fill="#f26439" opacity=".6"/>
+        <rect x="5" y="30" width="22" height="22" rx="3" fill="#f26439" opacity=".6"/>
+        <rect x="30" y="30" width="22" height="22" rx="3" fill="#f26439"/>
+        <text x="62" y="42" font-family="Inter,sans-serif" font-size="32" font-weight="800" fill="#f26439">EMF</text>
+        <text x="118" y="42" font-family="Inter,sans-serif" font-size="16" font-weight="400" fill="#999">APPS</text>
+      </svg>
     </div>
-    <div class="table-scroll">
-      <table>
-        <thead id="thead"></thead>
-        <tbody id="tbody"><tr><td class="empty-msg" colspan="20">Presiona Consultar para cargar datos.</td></tr></tbody>
-        <tfoot id="tfoot"></tfoot>
-      </table>
+    <nav class="nav">
+      <button class="nav-tab active" id="tab-ayr" onclick="switchTab('ayr')">Aportes y Rescates <button class="info-button" onclick="event.stopPropagation();showInfo()" title="Info">&#9432;</button></button>
+      <button class="nav-tab" id="tab-balance" onclick="switchTab('balance')">Cartera Acciones BCS</button>
+      <div class="nav-spacer"></div>
+      <label class="dark-toggle">Modo Oscuro
+        <label class="toggle-switch">
+          <input type="checkbox" onchange="toggleDarkMode(this)"/>
+          <span class="slider"></span>
+        </label>
+      </label>
+    </nav>
+    <div id="section-ayr" class="ayr-content">
+      <div class="update-buttons">
+        <div class="update-single-section">
+          <label>Fecha especifica</label>
+          <div class="datepicker-with-button">
+            <button class="update-button-compact" id="btn-update-single" onclick="updateSingle()">Actualizar dia</button>
+            <input type="date" id="date-single" class="datepicker"/>
+          </div>
+        </div>
+        <div class="update-from-section">
+          <label>Actualizar desde</label>
+          <div class="datepicker-with-button">
+            <button class="update-button-compact" id="btn-update-from" onclick="updateFrom()">Actualizar desde</button>
+            <input type="date" id="date-from" class="datepicker"/>
+          </div>
+        </div>
+        <div class="last-update">
+          <span class="last-update-icon">&#128336;</span>
+          <span id="last-update-text">Cargando...</span>
+        </div>
+      </div>
+      <div class="pagination-container">
+        <div class="pagination" id="filter-buttons"></div>
+        <div class="pagination" id="pagination"></div>
+        <div class="action-buttons">
+          <button class="download-button" onclick="downloadExcel()" title="Descargar Excel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19.903 8.586a1.007 1.007 0 0 0-.196-.293l-6-6a1.007 1.007 0 0 0-.293-.196A.985.985 0 0 0 13 2H6c-1.103 0-2 .897-2 2v16c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2V9a.985.985 0 0 0-.097-.414zM13 4.414 17.586 9H13V4.414zM6 20V4h5v7h7l.002 9H6z"/><path d="M8 12h8v2H8zm0 4h8v2H8zm0-8h3v2H8z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="table-charts-wrapper">
+        <div class="table-container">
+          <div class="table-scroll-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th onclick="sortAYR('dia')">Dia <span id="sort-dia"></span></th>
+                  <th onclick="sortAYR('fecha')">Fecha <span id="sort-fecha"></span></th>
+                  <th onclick="sortAYR('flujo_aportes')" class="col-monto">Flujo Aportes <span id="sort-flujo_aportes"></span></th>
+                  <th onclick="sortAYR('flujo_rescates')" class="col-monto">Flujo Rescates <span id="sort-flujo_rescates"></span></th>
+                  <th onclick="sortAYR('neto_aportes_rescates')" class="col-monto">Neto Aportes-Rescates <span id="sort-neto_aportes_rescates"></span></th>
+                  <th onclick="sortAYR('acumulado_aportes')" class="col-monto">Acumulado Aportes <span id="sort-acumulado_aportes"></span></th>
+                  <th onclick="sortAYR('acumulado_rescates')" class="col-monto">Acumulado Rescates <span id="sort-acumulado_rescates"></span></th>
+                  <th onclick="sortAYR('neto_acumulado')" class="col-monto">Neto Acumulado <span id="sort-neto_acumulado"></span></th>
+                </tr>
+              </thead>
+              <tbody id="ayr-tbody"><tr><td colspan="8" style="text-align:center">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="charts-container">
+          <div><canvas id="chart-flujos"></canvas></div>
+          <div><canvas id="chart-neto"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div id="section-balance" class="balance-content hidden">
+      <div class="balance-table-section">
+        <div id="balance-neteo-warning" class="balance-neteo-warning hidden"></div>
+        <div id="balance-error" class="balance-error hidden"></div>
+        <table class="balance-table">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th onclick="sortBalance('nemotecnico')">Instrumento <span id="bsort-nemotecnico">&#8597;</span></th>
+              <th onclick="sortBalance('existencia')" class="number">Existencia <span id="bsort-existencia">&#8597;</span></th>
+              <th onclick="sortBalance('precioCompraPromedio')" class="number">Precio Compra <span id="bsort-precioCompraPromedio">&#8597;</span></th>
+              <th onclick="sortBalance('precioCierre')" class="number">Precio Cierre <span id="bsort-precioCierre">&#8597;</span></th>
+              <th onclick="sortBalance('valorizacionCompra')" class="number">Valorizacion Compra <span id="bsort-valorizacionCompra">&#8597;</span></th>
+              <th onclick="sortBalance('valorizacionCierre')" class="number">Valorizacion Cierre <span id="bsort-valorizacionCierre">&#8597;</span></th>
+              <th onclick="sortBalance('ajusteMercado')" class="number">Ajuste A Mercado <span id="bsort-ajusteMercado">&#8597;</span></th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="balance-tbody"><tr><td colspan="9" class="balance-acciones-loading">No hay operaciones registradas. Sube un archivo para comenzar.</td></tr></tbody>
+          <tfoot id="balance-tfoot"></tfoot>
+        </table>
+      </div>
+      <div class="upload-section">
+        <div class="upload-box">
+          <h4>&#128194; Subir CSV de Operaciones</h4>
+          <div class="dropzone" id="csv-dropzone" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event,'csv')">
+            <span class="dropzone-icon">&#128196;</span>
+            <span>Arrastra un CSV/Excel o haz clic para seleccionar</span>
+            <span style="font-size:11px;color:var(--text2)">Formato BCS compatible</span>
+            <input type="file" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(this,'csv')"/>
+          </div>
+          <div class="upload-error hidden" id="csv-error"></div>
+        </div>
+        <div class="upload-box">
+          <h4>&#128202; Subir Balance Base (Excel)</h4>
+          <div class="dropzone" id="base-dropzone" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event,'base')">
+            <span class="dropzone-icon">&#128203;</span>
+            <span>Arrastra un Excel o haz clic para seleccionar</span>
+            <span style="font-size:11px;color:var(--text2)">Posicion inicial de cartera</span>
+            <input type="file" accept=".xlsx,.xls" onchange="handleFileSelect(this,'base')"/>
+          </div>
+          <div class="upload-error hidden" id="base-error"></div>
+        </div>
+      </div>
+      <div class="historial-section">
+        <h4>&#128193; Historial de Archivos</h4>
+        <div class="historial-notification" id="historial-notification"></div>
+        <div class="hidden" id="historial-confirm"></div>
+        <div id="historial-list"><p class="historial-empty">No hay archivos procesados aun</p></div>
+      </div>
+    </div>
+    <div id="info-modal" class="modal-overlay hidden" onclick="if(event.target===this)hideInfo()">
+      <div class="modal-content">
+        <button class="modal-close" onclick="hideInfo()">&#10005;</button>
+        <h3>Aportes y Rescates FFMM</h3>
+        <p>Esta app muestra los datos de Aportes y Rescates de los Fondos mutuos nacionales y el acumulado dia a dia.</p>
+        <p><strong>Fuente de datos:</strong> AAFM.cl</p>
+        <p><strong>Filtros utilizados (Categorias AFM):</strong></p>
+        <ul>
+          <li>Accionario Nacional</li>
+          <li>Accionario Nacional Large Cap</li>
+          <li>Accionario Nacional Otros</li>
+          <li>Accionario Nacional Small &amp; Mid Cap</li>
+          <li>Inversionistas Calificados Accionario Nacional</li>
+        </ul>
+      </div>
+    </div>
+    <div id="ops-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeOpsModal()">
+      <div class="ops-modal">
+        <button class="modal-close" onclick="closeOpsModal()">&#10005;</button>
+        <h3 id="ops-modal-title">Operaciones</h3>
+        <table class="ops-table">
+          <thead><tr><th>Fecha</th><th>Tipo</th><th>Nemotecnico</th><th>Cantidad</th><th>Precio</th><th>Monto</th><th>Corredor</th><th></th></tr></thead>
+          <tbody id="ops-modal-tbody"></tbody>
+        </table>
+        <div class="ops-footer">
+          <button class="add-row-button" onclick="addOpsRow()">+ Agregar fila</button>
+          <button class="save-button" onclick="saveOpsModal()">Guardar cambios</button>
+          <button class="cancel-button" onclick="closeOpsModal()">Cerrar</button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-
-<!-- TAB: MENSUAL -->
-<div class="page" id="page-mensual">
-  <div class="cards" id="monthCards"></div>
-  <div class="chart-box">
-    <div class="chart-header">
-      <h3 id="chartTitle">Flujo Neto Acumulado</h3>
-    </div>
-    <div class="chart-wrap"><canvas id="myChart"></canvas></div>
-    <div class="chart-legend">
-      <span><span class="dot" style="background:#219c4a"></span>Flujo neto diario positivo</span>
-      <span><span class="dot" style="background:#e53935"></span>Flujo neto diario negativo</span>
-      <span><span class="dot" style="background:#f26439"></span>Acumulado del mes</span>
-    </div>
-  </div>
-  <div class="days-box">
-    <h3>Días cargados</h3>
-    <div class="days-grid" id="daysGrid"></div>
-  </div>
-</div>
-
-<!-- TAB: HISTÓRICO ANUAL -->
-<div class="page" id="page-historico">
-  <div class="cards" id="histCards"></div>
-  <div class="chart-box">
-    <div class="chart-header">
-      <h3>Flujo Neto Mensual — Últimos 12 meses</h3>
-    </div>
-    <div class="chart-wrap"><canvas id="histChart"></canvas></div>
-    <div class="chart-legend">
-      <span><span class="dot" style="background:#219c4a"></span>Neto positivo</span>
-      <span><span class="dot" style="background:#e53935"></span>Neto negativo</span>
-      <span><span class="dot" style="background:rgba(180,180,180,.5)"></span>Sin datos</span>
-    </div>
-  </div>
-  <div class="table-box" style="margin-top:16px">
-    <div class="table-toolbar" style="justify-content:space-between">
-      <span style="font-size:.82rem;font-weight:600;color:var(--text)">Resumen mensual</span>
-      <button class="btn-download download-button" onclick="downloadHistExcel()" style="font-size:.78rem;padding:5px 12px">⬇ Excel</button>
-    </div>
-    <div class="table-scroll" style="max-height:none">
-      <table id="histTable">
-        <thead>
-          <tr>
-            <th>Mes</th>
-            <th>Aportes (MM CLP)</th>
-            <th>Rescates (MM CLP)</th>
-            <th>Flujo Neto (MM CLP)</th>
-            <th>Días cargados</th>
-            <th>Días hábiles</th>
-            <th>Cobertura</th>
-          </tr>
-        </thead>
-        <tbody id="histTbody"><tr><td class="empty-msg" colspan="7">Cargando historial...</td></tr></tbody>
-        <tfoot id="histTfoot"></tfoot>
-      </table>
-    </div>
-  </div>
-</div>
-
-
-<footer>Datos obtenidos desde <a href="https://estadisticas2.aafm.cl/DailyStadistics" target="_blank">AAFM — Asociación de Fondos Mutuos</a></footer>
-
 <script>
-// ─── Config ────────────────────────────────────────────────────────────────
-const DEFAULT_CATS = [
-  'Accionario Nacional',
-  'Accionario Nacional Large Cap',
-  'Accionario Nacional Otros',
-  'Accionario Nacional Small & Mid Cap',
-  'Inversionistas Calificados Accionario Nacional',
-];
-
-// ─── State ─────────────────────────────────────────────────────────────────
-let allRows = [], headers = [];
-let sortCol = null, sortDir = 1;
-let chart = null, monthData = [];
-let histChart = null, histData = [];
-let darkMode = localStorage.getItem('dark') === '1';
-
-// ─── Init ──────────────────────────────────────────────────────────────────
-(function init() {
-  if (darkMode) document.body.classList.add('dark-mode');
-
-  // Category checkboxes
-  const wrap = document.getElementById('catChecks');
-  DEFAULT_CATS.forEach(cat => {
-    const id = 'cat_' + cat.replace(/\W+/g, '_');
-    const label = document.createElement('label');
-    label.innerHTML = `<input type="checkbox" id="${id}" value="${cat}" checked> ${cat}`;
-    label.querySelector('input').addEventListener('change', () => { renderTable(); });
-    wrap.appendChild(label);
-  });
-
-  const yesterday = isoOffset(-1);
-  const inp = document.getElementById('dateInput');
-  inp.value = yesterday;
-  inp.max = yesterday;
-  inp.addEventListener('change', loadDay);
-
-  loadDay();
-  loadMonthly();
-})();
-
-function toggleDark() {
-  darkMode = !darkMode;
-  document.body.classList.toggle('dark-mode', darkMode);
-  localStorage.setItem('dark', darkMode ? '1' : '0');
-  if (chart) buildMonthChart();
-  if (histChart) buildHistChart();
-}
-
-// ─── Tabs ──────────────────────────────────────────────────────────────────
-function showTab(name) {
-  const TABS = ['diario','mensual','historico'];
-  document.querySelectorAll('.nav-tab').forEach((t, i) =>
-    t.classList.toggle('active', TABS[i] === name));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  if (name === 'historico') loadHistory();
-}
-
-// ─── Daily ─────────────────────────────────────────────────────────────────
-async function loadDay() {
-  const date = document.getElementById('dateInput').value;
-  setStatus('Cargando datos para ' + fmtDateDisplay(date) + '…', 'loading');
-  try {
-    const d = await api('/api/daily?date=' + date);
-    headers = d.headers || [];
-    allRows = d.rows || [];
-    const src = d.source === 'cache' ? `caché (${fmtDateTime(d.fetched_at)})` : `AAFM (${fmtDateTime(d.fetched_at)})`;
-    setStatus(`${allRows.length} fondos · Fuente: ${src}`);
-    renderTable();
-    renderCards();
-  } catch(e) { setStatus('Error: ' + e.message, 'error'); }
-}
-
-async function refreshDay() {
-  const date = document.getElementById('dateInput').value;
-  setStatus('Actualizando desde AAFM…', 'loading');
-  try {
-    const d = await api('/api/refresh?date=' + date, { method: 'POST' });
-    headers = d.headers || [];
-    allRows = d.rows || [];
-    setStatus(`${allRows.length} fondos actualizados desde AAFM.`);
-    renderTable();
-    renderCards();
-    loadMonthly();
-  } catch(e) { setStatus('Error: ' + e.message, 'error'); }
-}
-
-// ─── Render ─────────────────────────────────────────────────────────────────
-function selectedCats() {
-  return DEFAULT_CATS.filter(c => {
-    const el = document.getElementById('cat_' + c.replace(/\W+/g, '_'));
-    return el && el.checked;
-  });
-}
-
-function filteredRows() {
-  const cats = selectedCats();
-  const q = document.getElementById('searchBox').value.toLowerCase();
-  return allRows.filter(r => {
-    if (!cats.includes(r['Categoría AFM'] || '')) return false;
-    if (q && !['Administradora','Fondo','Serie'].map(k => r[k]||'').join(' ').toLowerCase().includes(q)) return false;
-    return true;
-  });
-}
-
-function renderTable() {
-  const rows = getSorted(filteredRows());
-  buildThead();
-  buildTbody(rows);
-  buildTfoot(rows);
-  renderCards(rows);
-  document.getElementById('rowCount').textContent = rows.length + ' registros';
-}
-
-const AK = () => headers.find(h => h.includes('Flujo Aporte'))   || '';
-const RK = () => headers.find(h => h.includes('Flujo Rescate'))  || '';
-const PK = () => headers.find(h => h.includes('Patrimonio neto'))|| '';
-
-function buildThead() {
-  const cols = [...headers, 'Flujo Neto ($)'];
-  document.getElementById('thead').innerHTML = '<tr>' + cols.map((h, i) => {
-    const cls = sortCol === i ? (sortDir > 0 ? 'asc' : 'desc') : '';
-    return `<th class="${cls}" onclick="sortBy(${i})">${h}</th>`;
-  }).join('') + '</tr>';
-}
-
-function buildTbody(rows) {
-  const ak = AK(), rk = RK();
-  if (!rows.length) {
-    document.getElementById('tbody').innerHTML = '<tr><td class="empty-msg" colspan="30">Sin resultados para los filtros seleccionados.</td></tr>';
-    return;
-  }
-  document.getElementById('tbody').innerHTML = rows.map((r, idx) => {
-    const a = pn(r[ak]), rv = pn(r[rk]), net = a - rv;
-    const isLast = idx === rows.length - 1;
-    const cells = headers.map(h => {
-      const v = r[h] || '';
-      if (h === 'Categoría AFM') return `<td><span class="badge">${v}</span></td>`;
-      if (h === ak) return `<td class="pos">${v}</td>`;
-      if (h === rk) return `<td class="neg">${v}</td>`;
-      return `<td>${v}</td>`;
-    }).join('');
-    return `<tr class="${isLast?'last-reg':''}">${cells}<td class="${net>=0?'pos':'neg'}">${fmtCLP(net)}</td></tr>`;
-  }).join('');
-}
-
-function buildTfoot(rows) {
-  const ak = AK(), rk = RK();
-  const totA = rows.reduce((s,r) => s + pn(r[ak]), 0);
-  const totR = rows.reduce((s,r) => s + pn(r[rk]), 0);
-  const totN = totA - totR;
-  const cells = headers.map((h, i) => {
-    if (i === 0) return `<td>TOTAL — ${rows.length} fondos</td>`;
-    if (h === ak) return `<td class="pos">${fmtCLP(totA)}</td>`;
-    if (h === rk) return `<td class="neg">${fmtCLP(totR)}</td>`;
-    return '<td></td>';
-  }).join('');
-  document.getElementById('tfoot').innerHTML = `<tr class="tfoot">${cells}<td class="${totN>=0?'pos':'neg'}">${fmtCLP(totN)}</td></tr>`;
-}
-
-function renderCards(rows) {
-  rows = rows || filteredRows();
-  const ak = AK(), rk = RK(), pk = PK();
-  const totA = rows.reduce((s,r) => s + pn(r[ak]), 0);
-  const totR = rows.reduce((s,r) => s + pn(r[rk]), 0);
-  const totP = rows.reduce((s,r) => s + pn(r[pk]), 0);
-  const net = totA - totR;
-  document.getElementById('cards').innerHTML = `
-    <div class="card c-green"><div class="lbl">Aportes</div><div class="val pos">${fmtMM(totA)}</div><div class="sub">MM CLP · ${rows.length} fondos</div></div>
-    <div class="card c-red"><div class="lbl">Rescates</div><div class="val neg">${fmtMM(totR)}</div><div class="sub">MM CLP</div></div>
-    <div class="card ${net>=0?'':'c-red'}"><div class="lbl">Flujo Neto</div><div class="val ${net>=0?'pos':'neg'}">${fmtMM(net)}</div><div class="sub">${net>=0?'Entrada neta':'Salida neta'}</div></div>
-    <div class="card c-blue"><div class="lbl">Patrimonio Neto</div><div class="val">${fmtMM(totP)}</div><div class="sub">MM CLP</div></div>
-  `;
-}
-
-// ─── Sort ──────────────────────────────────────────────────────────────────
-function sortBy(i) {
-  sortCol === i ? (sortDir *= -1) : (sortCol = i, sortDir = 1);
-  renderTable();
-}
-function getSorted(rows) {
-  if (sortCol === null) return rows;
-  const key = [...headers, 'Flujo Neto ($)'][sortCol];
-  const ak = AK(), rk = RK();
-  return [...rows].sort((a, b) => {
-    let av = key === 'Flujo Neto ($)' ? pn(a[ak]) - pn(a[rk]) : pn(a[key]) || a[key] || '';
-    let bv = key === 'Flujo Neto ($)' ? pn(b[ak]) - pn(b[rk]) : pn(b[key]) || b[key] || '';
-    if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sortDir;
-    return String(av).localeCompare(String(bv), 'es') * sortDir;
-  });
-}
-
-// ─── Monthly ───────────────────────────────────────────────────────────────
-async function loadMonthly() {
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth() + 1;
-  const cats = selectedCats().join('|');
-  try {
-    const data = await api(`/api/monthly-summary?year=${y}&month=${m}&cats=${encodeURIComponent(cats)}`);
-    monthData = data;
-    renderDaysGrid();
-    buildMonthChart();
-    fetchMissing(data.filter(d => !d.loaded).map(d => d.date), y, m, cats);
-  } catch(e) { console.error('monthly:', e); }
-}
-
-async function fetchMissing(dates, y, m, cats) {
-  for (const date of dates) {
-    try {
-      setStatus(`Cargando historial: ${fmtDateDisplay(date)}…`, 'loading');
-      await api('/api/daily?date=' + date);
-      const data = await api(`/api/monthly-summary?year=${y}&month=${m}&cats=${encodeURIComponent(cats)}`);
-      monthData = data;
-      renderDaysGrid();
-      buildMonthChart();
-    } catch(e) { /* skip */ }
-  }
-  if (dates.length) setStatus('Historial mensual completo.');
-}
-
-function buildMonthChart() {
-  const loaded = monthData.filter(d => d.loaded);
-  if (!loaded.length) return;
-
-  const now = new Date();
-  document.getElementById('chartTitle').textContent =
-    `Flujo Neto Acumulado — ${now.toLocaleString('es-CL', { month: 'long', year: 'numeric' })}`;
-
-  const labels  = loaded.map(d => d.date.slice(5));
-  const nets    = loaded.map(d => d.netFlow || 0);
-  const cumul   = nets.reduce((acc, v) => { acc.push((acc[acc.length-1]||0)+v); return acc; }, []);
-  const barColors = nets.map(v => v >= 0 ? 'rgba(33,156,74,.75)' : 'rgba(229,57,53,.75)');
-
-  const totA = loaded.reduce((s,d) => s+(d.aportes||0), 0);
-  const totR = loaded.reduce((s,d) => s+(d.rescates||0), 0);
-  const totN = totA - totR;
-  document.getElementById('monthCards').innerHTML = `
-    <div class="card c-green"><div class="lbl">Aportes acumulados</div><div class="val pos">${fmtMM(totA)}</div><div class="sub">MM CLP · ${loaded.length} días</div></div>
-    <div class="card c-red"><div class="lbl">Rescates acumulados</div><div class="val neg">${fmtMM(totR)}</div><div class="sub">MM CLP</div></div>
-    <div class="card ${totN>=0?'':'c-red'}"><div class="lbl">Neto acumulado</div><div class="val ${totN>=0?'pos':'neg'}">${fmtMM(totN)}</div><div class="sub">${totN>=0?'Entrada neta':'Salida neta'} del mes</div></div>
-  `;
-
-  const isDark = document.body.classList.contains('dark-mode');
-  const gridColor = isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.06)';
-  const tickColor = isDark ? '#aaa' : '#666';
-
-  if (chart) chart.destroy();
-  chart = new Chart(document.getElementById('myChart'), {
-    data: {
-      labels,
-      datasets: [
-        {
-          type: 'bar',
-          label: 'Flujo Neto Diario (MM CLP)',
-          data: nets.map(v => v/1e6),
-          backgroundColor: barColors,
-          yAxisID: 'yBar',
-          order: 2,
-        },
-        {
-          type: 'line',
-          label: 'Acumulado (MM CLP)',
-          data: cumul.map(v => v/1e6),
-          borderColor: '#f26439',
-          backgroundColor: 'rgba(242,100,57,.08)',
-          borderWidth: 2.5,
-          pointRadius: 3,
-          pointBackgroundColor: '#f26439',
-          fill: true,
-          tension: .35,
-          yAxisID: 'yLine',
-          order: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index' },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('es-CL',{minimumFractionDigits:1})} MM`
-          }
-        }
-      },
-      scales: {
-        yBar: { type:'linear', position:'right', grid:{ display:false }, ticks:{ color:tickColor, callback: v => v.toLocaleString('es-CL')+' MM' } },
-        yLine: { type:'linear', position:'left', grid:{ color:gridColor }, ticks:{ color:tickColor, callback: v => v.toLocaleString('es-CL')+' MM' } },
-        x: { grid:{ display:false }, ticks:{ color:tickColor } },
-      },
-    },
-  });
-}
-
-function renderDaysGrid() {
-  document.getElementById('daysGrid').innerHTML = monthData.map(d =>
-    `<span class="day-chip ${d.loaded?'loaded':'pending'}">${d.date.slice(5)}</span>`
-  ).join('');
-}
-
-// ─── Excel ─────────────────────────────────────────────────────────────────
-function downloadExcel() {
-  const rows = filteredRows();
-  if (!rows.length) return alert('No hay datos para descargar.');
-  const ak = AK(), rk = RK();
-  const out = rows.map(r => ({ ...r, 'Flujo Neto ($)': pn(r[ak]) - pn(r[rk]) }));
-  const ws = XLSX.utils.json_to_sheet(out, { header: [...headers, 'Flujo Neto ($)'] });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'FFMM Accionario Nacional');
-  XLSX.writeFile(wb, `FFMM_Accionario_Nacional_${document.getElementById('dateInput').value}.xlsx`);
-}
-
-// ─── Histórico Anual ────────────────────────────────────────────────────────
-async function loadHistory() {
-  setStatus('Calculando historial mensual…', 'loading');
-  try {
-    // Always build exactly 12 months (oldest → newest), including empty ones
-    const now = new Date();
-    const months = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
-    }
-
-    const results = await Promise.all(months.map(({ year, month }) => {
-      const ym = `${year}-${String(month).padStart(2, '0')}`;
-      return api(`/api/monthly-summary?year=${year}&month=${month}`)
-        .then(days => {
-          const loaded = days.filter(d => d.loaded);
-          const aportes  = loaded.reduce((s, d) => s + (d.aportes  || 0), 0);
-          const rescates = loaded.reduce((s, d) => s + (d.rescates || 0), 0);
-          return { year_month: ym, aportes, rescates, net_flow: aportes - rescates,
-                   days_count: loaded.length, working_days: days.length, hasData: loaded.length > 0 };
-        })
-        .catch(() => ({ year_month: ym, aportes: 0, rescates: 0, net_flow: 0,
-                        days_count: 0, working_days: 0, hasData: false }));
-    }));
-
-    histData = results;
-    setStatus('');
-    renderHistTable();
-    buildHistChart();
-    renderHistCards();
-  } catch(e) { setStatus('Error: ' + e.message, 'error'); }
-}
-
-function renderHistCards() {
-  if (!histData.length) return;
-  const totA = histData.reduce((s,d) => s+(d.aportes||0), 0);
-  const totR = histData.reduce((s,d) => s+(d.rescates||0), 0);
-  const totN = totA - totR;
-  document.getElementById('histCards').innerHTML = `
-    <div class="card c-green"><div class="lbl">Aportes 12 meses</div><div class="val pos">${fmtMM(totA)}</div><div class="sub">MM CLP acumulado</div></div>
-    <div class="card c-red"><div class="lbl">Rescates 12 meses</div><div class="val neg">${fmtMM(totR)}</div><div class="sub">MM CLP acumulado</div></div>
-    <div class="card ${totN>=0?'':'c-red'}"><div class="lbl">Neto 12 meses</div><div class="val ${totN>=0?'pos':'neg'}">${fmtMM(totN)}</div><div class="sub">${totN>=0?'Entrada neta':'Salida neta'}</div></div>
-  `;
-}
-
-function buildHistChart() {
-  if (!histData.length) return;
-
-  const labels     = histData.map(d => {
-    const [y, m] = d.year_month.split('-');
-    return new Date(+y, +m-1, 1).toLocaleString('es-CL', { month: 'short', year: '2-digit' });
-  });
-  const nets       = histData.map(d => (d.net_flow || 0) / 1e6);
-  const barColors  = histData.map(d =>
-    !d.hasData ? 'rgba(180,180,180,.3)' : d.net_flow >= 0 ? 'rgba(33,156,74,.8)' : 'rgba(229,57,53,.8)'
-  );
-
-  const isDark    = document.body.classList.contains('dark-mode');
-  const gridColor = isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.07)';
-  const tickColor = isDark ? '#aaa' : '#666';
-
-  if (histChart) histChart.destroy();
-  histChart = new Chart(document.getElementById('histChart'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Flujo Neto Mensual (MM CLP)',
-        data: nets,
-        backgroundColor: barColors,
-        borderRadius: 4,
-        borderSkipped: false,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const d = histData[ctx.dataIndex];
-              if (!d.hasData) return 'Sin datos';
-              return `Neto: ${ctx.parsed.y.toLocaleString('es-CL', { minimumFractionDigits: 1 })} MM CLP`;
-            },
-            afterLabel: ctx => {
-              const d = histData[ctx.dataIndex];
-              if (!d.hasData) return '';
-              return [
-                `Aportes:  ${(d.aportes/1e6).toLocaleString('es-CL',{minimumFractionDigits:1})} MM`,
-                `Rescates: ${(d.rescates/1e6).toLocaleString('es-CL',{minimumFractionDigits:1})} MM`,
-                `Días: ${d.days_count}/${d.working_days}`,
-              ];
-            },
-          }
-        }
-      },
-      scales: {
-        y: {
-          grid: { color: gridColor },
-          ticks: { color: tickColor, callback: v => v.toLocaleString('es-CL') + ' MM' },
-        },
-        x: { grid: { display: false }, ticks: { color: tickColor } },
-      },
-    },
-  });
-}
-
-function renderHistTable() {
-  const tbody = document.getElementById('histTbody');
-  if (!histData.length) {
-    tbody.innerHTML = '<tr><td class="empty-msg" colspan="7">Sin datos históricos disponibles.</td></tr>';
-    document.getElementById('histTfoot').innerHTML = '';
-    return;
-  }
-  tbody.innerHTML = histData.map(d => {
-    const [y, m] = d.year_month.split('-');
-    const label = new Date(+y, +m-1, 1).toLocaleString('es-CL', { month: 'long', year: 'numeric' });
-    const net = d.net_flow || 0;
-    const cov = d.working_days ? Math.round(d.days_count / d.working_days * 100) : 0;
-    return `<tr>
-      <td>${label.charAt(0).toUpperCase()+label.slice(1)}</td>
-      <td class="pos">${fmtMM(d.aportes||0)}</td>
-      <td class="neg">${fmtMM(d.rescates||0)}</td>
-      <td class="${net>=0?'pos':'neg'}">${fmtMM(net)}</td>
-      <td>${d.days_count}</td>
-      <td>${d.working_days}</td>
-      <td>${cov}%</td>
-    </tr>`;
-  }).join('');
-
-  const totA = histData.reduce((s,d) => s+(d.aportes||0), 0);
-  const totR = histData.reduce((s,d) => s+(d.rescates||0), 0);
-  const totN = totA - totR;
-  document.getElementById('histTfoot').innerHTML = `
-    <tr class="tfoot">
-      <td>TOTAL — ${histData.length} meses</td>
-      <td class="pos">${fmtMM(totA)}</td>
-      <td class="neg">${fmtMM(totR)}</td>
-      <td class="${totN>=0?'pos':'neg'}">${fmtMM(totN)}</td>
-      <td colspan="3"></td>
-    </tr>`;
-}
-
-function downloadHistExcel() {
-  if (!histData.length) return alert('No hay datos históricos para descargar.');
-  const out = histData.map(d => {
-    const [y, m] = d.year_month.split('-');
-    const label = new Date(+y, +m-1, 1).toLocaleString('es-CL', { month: 'long', year: 'numeric' });
-    return {
-      'Mes': label.charAt(0).toUpperCase()+label.slice(1),
-      'Aportes (MM CLP)': +(d.aportes/1e6).toFixed(1),
-      'Rescates (MM CLP)': +(d.rescates/1e6).toFixed(1),
-      'Flujo Neto (MM CLP)': +((d.net_flow||0)/1e6).toFixed(1),
-      'Días cargados': d.days_count,
-      'Días hábiles': d.working_days,
-      'Cobertura (%)': d.working_days ? Math.round(d.days_count/d.working_days*100) : 0,
-    };
-  });
-  const ws = XLSX.utils.json_to_sheet(out);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Histórico Mensual');
-  XLSX.writeFile(wb, `FFMM_Historico_Mensual_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
-
-function backfillHistory() {
-  const btn = document.getElementById('btnBackfill');
-  btn.disabled = true;
-  btn.textContent = '⏳ Cargando…';
-  setStatus('Conectando con AAFM para cargar historial…', 'loading');
-
-  const es = new EventSource('/api/backfill?months=12');
-
-  es.onmessage = async (e) => {
-    const d = JSON.parse(e.data);
-    if (d.type === 'start') {
-      if (d.total === 0) {
-        setStatus(`Historial ya estaba completo (${d.already} días en caché).`);
-      } else {
-        setStatus(`Cargando ${d.total} días desde AAFM (${d.already} ya en caché)…`, 'loading');
-      }
-    } else if (d.type === 'progress') {
-      setStatus(`Descargando historial: ${d.done}/${d.total} días… (${d.date})`, 'loading');
-    } else if (d.type === 'done') {
-      es.close();
-      btn.disabled = false;
-      btn.textContent = '⬇ Cargar historial';
-      setStatus(`Historial cargado: ${d.done} días descargados desde AAFM.`);
-      await loadHistory();
-    } else if (d.type === 'error') {
-      es.close();
-      btn.disabled = false;
-      btn.textContent = '⬇ Cargar historial';
-      setStatus('Error cargando historial: ' + d.message, 'error');
-    }
-  };
-
-  es.onerror = () => {
-    es.close();
-    btn.disabled = false;
-    btn.textContent = '⬇ Cargar historial';
-    setStatus('Error de conexión al cargar historial.', 'error');
-  };
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
-async function api(url, opts={}) {
-  const r = await fetch(url, opts);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  const d = await r.json();
-  if (d.error) throw new Error(d.error);
-  return d;
-}
-function pn(v) {
-  if (!v || v === '-') return 0;
-  return parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
-}
-function fmtCLP(n) { return n.toLocaleString('es-CL',{maximumFractionDigits:0}); }
-function fmtMM(n)  { return (n/1e6).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1}); }
-function fmtDateTime(iso) { return iso ? new Date(iso).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'}) : ''; }
-function fmtDateDisplay(iso) { return iso ? new Date(iso+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}) : ''; }
-function isoOffset(days) { const d=new Date(); d.setDate(d.getDate()+days); return d.toISOString().split('T')[0]; }
-function setStatus(msg, type='') { const b=document.getElementById('status'); b.textContent=msg; b.className='status'+(type?' '+type:''); }
-
+const API=window.location.origin+'/api';
+const DIAS=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+let ayrData=[],ayrSortKey='fecha',ayrSortDir='desc',ayrPage=1;
+const PAGE=50;
+let balData=[],balSortKey='valorizacionCierre',balSortDir='desc';
+let histData=[],opsHid=null,opsData=[];
+let cF=null,cN=null;
+let activeFilter='ALL';
+const MONTH_NAMES=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+function getFilteredAYR(){if(activeFilter==='ALL')return ayrData;if(/^\d{4}$/.test(activeFilter))return ayrData.filter(r=>r.fecha.startsWith(activeFilter));const mIdx=MONTH_NAMES.indexOf(activeFilter);if(mIdx>=0){const mStr=String(mIdx+1).padStart(2,'0');return ayrData.filter(r=>r.fecha.split('-')[1]===mStr);}return ayrData;}
+function buildFilterButtons(){const years=[...new Set(ayrData.map(r=>r.fecha.split('-')[0]))].sort();const months=[...new Set(ayrData.map(r=>r.fecha.split('-')[1]))].sort();const mLabels=months.map(m=>MONTH_NAMES[parseInt(m)-1]);let h=`<button onclick="setFilter('ALL')" class="${activeFilter==='ALL'?'active':''}">ALL</button>`;years.forEach(y=>{h+=`<button onclick="setFilter('${y}')" class="${activeFilter===y?'active':''}">${y}</button>`;});mLabels.forEach(m=>{h+=`<button onclick="setFilter('${m}')" class="${activeFilter===m?'active':''}">${m}</button>`;});return h;}
+function setFilter(f){activeFilter=f;ayrPage=1;renderAYR();}
+function toggleDarkMode(cb){document.body.classList.toggle('dark-mode',cb.checked);document.getElementById('app').classList.toggle('dark-mode',cb.checked);if(ayrData.length)renderCharts(ayrData);}
+function switchTab(t){['ayr','balance'].forEach(x=>{document.getElementById('section-'+x).classList.toggle('hidden',x!==t);document.getElementById('tab-'+x).classList.toggle('active',x===t);});if(t==='balance'){loadBal();loadHist();}}
+function fN(n){if(n==null||isNaN(n))return'-';return Number(n).toLocaleString('es-CL',{maximumFractionDigits:0});}
+function fD(n,d=2){if(n==null||isNaN(n))return'-';return Number(n).toLocaleString('es-CL',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fDate(iso){if(!iso)return'-';const[y,m,d]=iso.split('-');return d+'-'+m+'-'+y;}
+function dow(iso){if(!iso)return'';return DIAS[new Date(iso+'T12:00:00Z').getUTCDay()];}
+function dark(){return document.body.classList.contains('dark-mode');}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escA(s){return String(s||'').replace(/'/g,"&#39;");}
+async function loadAYR(){try{const r=await fetch(API+'/fetch-data');if(!r.ok)throw new Error('HTTP '+r.status);ayrData=await r.json();if(!Array.isArray(ayrData))throw new Error('Formato invalido');document.getElementById('last-update-text').textContent='Ultima actualizacion: '+new Date().toLocaleString('es-CL');renderAYR();renderCharts(ayrData);}catch(e){document.getElementById('ayr-tbody').innerHTML='<tr><td colspan="8" style="text-align:center;color:red">Error: '+escH(e.message)+'</td></tr>';}}
+function sortAYR(k){if(ayrSortKey===k)ayrSortDir=ayrSortDir==='asc'?'desc':'asc';else{ayrSortKey=k;ayrSortDir='desc';}ayrPage=1;renderAYR();}
+function getSortedAYR(){return[...getFilteredAYR()].sort((a,b)=>{let va=ayrSortKey==='dia'?dow(a.fecha):(a[ayrSortKey]??''),vb=ayrSortKey==='dia'?dow(b.fecha):(b[ayrSortKey]??'');if(va<vb)return ayrSortDir==='asc'?-1:1;if(va>vb)return ayrSortDir==='asc'?1:-1;return 0;});}
+function renderAYR(){const fb=document.getElementById('filter-buttons');if(fb)fb.innerHTML=buildFilterButtons();const s=getSortedAYR(),tot=Math.max(1,Math.ceil(s.length/PAGE));if(ayrPage>tot)ayrPage=tot;const pg=s.slice((ayrPage-1)*PAGE,ayrPage*PAGE);const ld=ayrData.length?ayrData[ayrData.length-1].fecha:null;document.getElementById('ayr-tbody').innerHTML=pg.length===0?'<tr><td colspan="8" style="text-align:center">No hay data disponible</td></tr>':pg.map(r=>`<tr class="${r.fecha===ld?'last-registered':''}"><td>${dow(r.fecha)}</td><td>${fDate(r.fecha)}</td><td class="col-monto">${fN(r.flujo_aportes)}</td><td class="col-monto">${fN(r.flujo_rescates)}</td><td class="col-monto">${fN(r.neto_aportes_rescates)}</td><td class="col-monto">${fN(r.acumulado_aportes)}</td><td class="col-monto">${fN(r.acumulado_rescates)}</td><td class="col-monto">${fN(r.neto_acumulado)}</td></tr>`).join('');renderPg(tot);['dia','fecha','flujo_aportes','flujo_rescates','neto_aportes_rescates','acumulado_aportes','acumulado_rescates','neto_acumulado'].forEach(k=>{const el=document.getElementById('sort-'+k);if(el)el.textContent=ayrSortKey===k?(ayrSortDir==='asc'?'&#9650;':'&#9660;'):'';}); }
+function renderPg(tot){const pg=document.getElementById('pagination');if(tot<=1){pg.innerHTML='';return;}let h='',W=3,s=Math.max(1,ayrPage-W),e=Math.min(tot,ayrPage+W);if(s>1)h+=`<button onclick="goPg(1)">1</button>${s>2?'<span>...</span>':''}`;for(let i=s;i<=e;i++)h+=`<button class="${i===ayrPage?'active':''}" onclick="goPg(${i})">${i}</button>`;if(e<tot)h+=`${e<tot-1?'<span>...</span>':''}<button onclick="goPg(${tot})">${tot}</button>`;pg.innerHTML=h;}
+function goPg(n){ayrPage=n;renderAYR();window.scrollTo(0,0);}
+function renderCharts(d){const dk=dark(),gc=dk?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)',tc=dk?'#fff':'#333';const d60=d.slice(-60),lb=d60.map(r=>fDate(r.fecha));if(cF)cF.destroy();if(cN)cN.destroy();const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:11},maxTicksLimit:10}},y:{grid:{color:gc},ticks:{color:tc}}}};cF=new Chart(document.getElementById('chart-flujos').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'Aportes',data:d60.map(r=>r.flujo_aportes),borderColor:'rgba(75,192,192,1)',backgroundColor:'rgba(75,192,192,.2)',fill:false},{label:'Rescates',data:d60.map(r=>r.flujo_rescates),borderColor:'rgba(255,99,132,1)',backgroundColor:'rgba(255,99,132,.2)',fill:false},{label:'Neto',data:d60.map(r=>r.neto_aportes_rescates),borderColor:'#f26439',backgroundColor:'rgba(242,100,57,.2)',fill:false}]},options:baseOpts});cN=new Chart(document.getElementById('chart-neto').getContext('2d'),{type:'line',data:{labels:lb,datasets:[{label:'Neto Acumulado',data:d60.map(r=>r.neto_acumulado),borderColor:'#f26439',backgroundColor:'rgba(242,100,57,.15)',fill:true}]},options:{...baseOpts,scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:11},maxTicksLimit:10}},y:{grid:{color:gc},ticks:{color:tc,callback:v=>fN(v)}}}}});}
+async function updateSingle(){const date=document.getElementById('date-single').value;if(!date)return alert('Selecciona una fecha');if(new Date(date)>=new Date())return alert('La fecha debe ser anterior a hoy');const btn=document.getElementById('btn-update-single');btn.disabled=true;btn.textContent='...';btn.classList.add('processing');try{const r=await fetch(API+'/update/'+date);if(!r.ok)throw new Error('HTTP '+r.status);await loadAYR();alert('Datos para '+date+' actualizados.');}catch(e){alert('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Actualizar dia';btn.classList.remove('processing');}}
+async function updateFrom(){const date=document.getElementById('date-from').value;if(!date)return alert('Selecciona una fecha');if(new Date(date)>=new Date())return alert('La fecha debe ser anterior a hoy');const days=Math.ceil(Math.abs(new Date()-new Date(date))/86400000);if(!confirm('Actualizar desde '+date+'?\nAprox. '+Math.floor(days*.7)+' dias habiles.\nEsto puede tomar varios minutos.'))return;const btn=document.getElementById('btn-update-from');btn.disabled=true;btn.textContent='...';btn.classList.add('processing');try{const r=await fetch(API+'/updatefrom/'+date);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();await loadAYR();alert('Actualizacion completada: '+(j.message||'OK'));}catch(e){alert('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Actualizar desde';btn.classList.remove('processing');}}
+async function downloadExcel(){try{const r=await fetch(API+'/download-excel');if(!r.ok)throw new Error('HTTP '+r.status);const blob=await r.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Aportes_y_Rescates.xlsx';document.body.appendChild(a);a.click();a.remove();}catch(e){alert('Error: '+e.message);}}
+async function loadBal(){const err=document.getElementById('balance-error');err.classList.add('hidden');try{const r=await fetch(API+'/balance-acciones');if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();balData=j.balance||j||[];const neteados=j.nemotecnicosNeteados||[];const nw=document.getElementById('balance-neteo-warning');if(neteados.length){nw.textContent='Instrumentos neteados (existencia 0): '+neteados.join(', ');nw.classList.remove('hidden');}else nw.classList.add('hidden');renderBal();}catch(e){err.textContent=e.message;err.classList.remove('hidden');}}
+function sortBalance(k){if(balSortKey===k)balSortDir=balSortDir==='asc'?'desc':'asc';else{balSortKey=k;balSortDir='desc';}renderBal();}
+function renderBal(){const s=[...balData].sort((a,b)=>{let va=a[balSortKey]??'',vb=b[balSortKey]??'';if(va<vb)return balSortDir==='asc'?-1:1;if(va>vb)return balSortDir==='asc'?1:-1;return 0;});const tbody=document.getElementById('balance-tbody');if(!s.length){tbody.innerHTML='<tr><td colspan="9" class="balance-acciones-loading">No hay operaciones registradas.</td></tr>';document.getElementById('balance-tfoot').innerHTML='';return;}tbody.innerHTML=s.map((r,i)=>`<tr><td><span style="font-size:.7rem;font-weight:700;padding:2px 6px;border-radius:4px;background:${r.tipo_operacion==='Compra'?'#e0f0ff':'#fce4ec'};color:${r.tipo_operacion==='Compra'?'#1565c0':'#c62828'}">${escH(r.tipo_operacion||'')}</span></td><td><strong>${escH(r.nemotecnico)}</strong></td><td class="number">${fN(r.existencia)}</td><td class="number">${fD(r.precioCompraPromedio)}</td><td class="number" id="bprc-${i}">${fD(r.precioCierre)}</td><td class="number">${fN(r.valorizacionCompra)}</td><td class="number">${fN(r.valorizacionCierre)}</td><td class="number ${r.ajusteMercado<0?'negative':''}">${fN(r.ajusteMercado)}</td><td><button class="edit-button" onclick="editP('${escA(r.nemotecnico)}',${r.precioCierre},${i})">&#x270F;</button><button class="delete-adjustment-button" onclick="delAj('${escA(r.nemotecnico)}')" title="Eliminar ajuste">&#x2715;</button></td></tr>`).join('');const tv=s.reduce((a,r)=>a+(r.valorizacionCompra||0),0),tc=s.reduce((a,r)=>a+(r.valorizacionCierre||0),0),ta=s.reduce((a,r)=>a+(r.ajusteMercado||0),0);document.getElementById('balance-tfoot').innerHTML=`<tr class="total-row"><td colspan="5"><strong>TOTAL</strong></td><td class="number"><strong>${fN(tv)}</strong></td><td class="number"><strong>${fN(tc)}</strong></td><td class="number ${ta<0?'negative':''}"><strong>${fN(ta)}</strong></td><td></td></tr>`;['nemotecnico','existencia','precioCompraPromedio','precioCierre','valorizacionCompra','valorizacionCierre','ajusteMercado'].forEach(k=>{const el=document.getElementById('bsort-'+k);if(el)el.innerHTML=balSortKey===k?(balSortDir==='asc'?'&#9650;':'&#9660;'):'&#8597;';});}
+function editP(nem,cur,i){const td=document.getElementById('bprc-'+i);if(!td)return;td.innerHTML=`<input class="edit-input-inline" type="number" id="epi-${i}" value="${cur}" step="0.01"/><div class="edit-actions-inline"><button class="save-button-inline" onclick="saveP('${escA(nem)}',${i})">&#x2713;</button><button class="cancel-button-inline" onclick="renderBal()">&#x2715;</button></div>`;}
+async function saveP(nem,i){const val=parseFloat(document.getElementById('epi-'+i)?.value);if(isNaN(val))return alert('Precio invalido');try{const r=await fetch(API+'/actualizar-fila-balance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nemotecnico:nem,precioCierre:val})});if(!r.ok)throw new Error('HTTP '+r.status);await loadBal();}catch(e){alert('Error: '+e.message);}}
+async function delAj(nem){try{const r=await fetch(API+'/ajuste-manual-balance/'+encodeURIComponent(nem),{method:'DELETE'});if(!r.ok)throw new Error('HTTP '+r.status);await loadBal();}catch(e){alert('Error: '+e.message);}}
+async function loadHist(){try{const r=await fetch(API+'/historial-archivos');if(!r.ok)throw new Error('HTTP '+r.status);histData=await r.json();renderHist();}catch(e){console.error('Historial error:',e);}}
+function renderHist(){const c=document.getElementById('historial-list');if(!histData.length){c.innerHTML='<p class="historial-empty">No hay archivos procesados aun</p>';return;}c.innerHTML=`<table class="historial-table"><thead><tr><th style="width:60px"></th><th>Archivo</th><th>Tipo</th><th>Fecha</th><th>Ops</th><th></th></tr></thead><tbody>${histData.map(h=>`<tr><td><button onclick="dlCsv(${h.id})" class="delete-adjustment-button" title="Descargar" style="font-size:16px">&#128229;</button>${h.tipo==='csv'?`<button onclick="viewOps(${h.id},'${escA(h.nombreArchivo)}')" class="delete-adjustment-button" title="Ver" style="font-size:16px">&#128270;</button>`:''}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(h.nombreArchivo)}</td><td><span class="tipo-badge ${h.tipo}">${h.tipo==='csv'?'CSV':'Balance Base'}</span></td><td>${new Date(h.fechaProcesamiento).toLocaleDateString('es-CL')}</td><td style="text-align:right">${h.cantidadOperaciones||0}</td><td><button class="delete-button" onclick="confirmDel(${h.id},'${escA(h.nombreArchivo)}')">&#128465;</button></td></tr>`).join('')}</tbody></table>`;}
+function confirmDel(id,nombre){const c=document.getElementById('historial-confirm');c.className='historial-confirm-dialog';c.innerHTML=`<div class="confirm-dialog-message">Eliminar "<strong>${escH(nombre)}</strong>" y sus operaciones?</div><div class="confirm-dialog-buttons"><button class="cancel-button" onclick="document.getElementById('historial-confirm').className='hidden'">Cancelar</button><button class="confirm-button" onclick="delOk(${id})">Eliminar</button></div>`;}
+async function delOk(id){document.getElementById('historial-confirm').className='hidden';try{const r=await fetch(API+'/historial-archivos/'+id,{method:'DELETE'});if(!r.ok)throw new Error('HTTP '+r.status);showNotif('Archivo eliminado','success');await loadHist();await loadBal();}catch(e){showNotif('Error: '+e.message,'error');}}
+function showNotif(msg,tipo){const el=document.getElementById('historial-notification');el.textContent=msg;el.className='historial-notification visible '+tipo;setTimeout(()=>el.classList.remove('visible'),3000);}
+async function dlCsv(id){try{const r=await fetch(API+'/descargar-csv-transformado/'+id);if(!r.ok)throw new Error('HTTP '+r.status);const blob=await r.blob();const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='operaciones_'+id+'.csv';document.body.appendChild(a);a.click();a.remove();}catch(e){alert('Error: '+e.message);}}
+async function viewOps(hid,nombre){opsHid=hid;document.getElementById('ops-modal-title').textContent='Operaciones: '+nombre;try{const r=await fetch(API+'/historial-operaciones/'+hid);if(!r.ok)throw new Error('HTTP '+r.status);opsData=await r.json();renderOps();document.getElementById('ops-modal').classList.remove('hidden');}catch(e){alert('Error: '+e.message);}}
+function renderOps(){const tb=document.getElementById('ops-modal-tbody');if(!opsData.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center">Sin operaciones</td></tr>';return;}tb.innerHTML=opsData.map((op,i)=>`<tr><td>${escH(op.Fecha||op.fecha||'')}</td><td>${escH(op.Tipo||op.tipo||'')}</td><td>${escH(op.Nemotecnico||op.nemotecnico||'')}</td><td class="number">${fN(op.Cantidad||op.cantidad)}</td><td class="number">${fD(op.Precio||op.precio)}</td><td class="number">${fN(op.Monto||op.monto)}</td><td>${escH(op.Corredor||op.corredor||'')}</td><td><button class="delete-button" onclick="rmOp(${i})">&#x2715;</button></td></tr>`).join('');}
+function rmOp(i){opsData.splice(i,1);renderOps();}
+function addOpsRow(){opsData.push({Fecha:'',Tipo:'Compra',Nemotecnico:'',Cantidad:0,Precio:0,Monto:0,Corredor:''});renderOps();}
+async function saveOpsModal(){if(opsHid===null)return;try{const r=await fetch(API+'/historial-operaciones/'+opsHid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operaciones:opsData})});if(!r.ok)throw new Error('HTTP '+r.status);showNotif('Operaciones guardadas','success');await loadBal();closeOpsModal();}catch(e){alert('Error: '+e.message);}}
+function closeOpsModal(){document.getElementById('ops-modal').classList.add('hidden');}
+const CORREDORES=[{codigo:1,nombre:'EMF'},{codigo:20,nombre:'SECURITY'},{codigo:35,nombre:'LARRAIN VIAL'},{codigo:47,nombre:'GBM'},{codigo:56,nombre:'DEUTSCHE'},{codigo:58,nombre:'BCI'},{codigo:88,nombre:'SANTANDER'},{codigo:61,nombre:'MERRIL'},{codigo:66,nombre:'CREDICORP CAPITAL'},{codigo:85,nombre:'SCOTIA'},{codigo:48,nombre:'SCOTIA'},{codigo:70,nombre:'BTG PACTUAL'},{codigo:72,nombre:'CORPBANCA'},{codigo:76,nombre:'EUROAMERICA'},{codigo:91,nombre:'PENTA'},{codigo:82,nombre:'BICE'},{codigo:83,nombre:'CRUZ DEL SUR'},{codigo:86,nombre:'BANCHILE'},{codigo:90,nombre:'CONSORCIO'},{codigo:51,nombre:'NEVASA'}];
+function handleDrop(ev,tipo){ev.preventDefault();ev.currentTarget.classList.remove('dragover');const f=ev.dataTransfer.files[0];if(f)processFile(f,tipo);}
+function handleFileSelect(inp,tipo){const f=inp.files[0];if(f){processFile(f,tipo);inp.value='';}}
+async function processFile(file,tipo){const errEl=document.getElementById(tipo==='csv'?'csv-error':'base-error');errEl.classList.add('hidden');if(tipo==='base')await uploadBase(file,errEl);else await procesarCSV(file,errEl);}
+async function uploadBase(file,errEl){const fd=new FormData();fd.append('archivo',file);try{const r=await fetch(API+'/upload-balance-base',{method:'POST',body:fd});if(!r.ok){const j=await r.json();throw new Error(j.error||'HTTP '+r.status);}const j=await r.json();alert('Balance base cargado. Se procesaron '+j.saved+' operaciones.');await loadBal();await loadHist();}catch(e){errEl.textContent=e.message;errEl.classList.remove('hidden');}}
+async function procesarCSV(file,errEl){return new Promise(resolve=>{const reader=new FileReader();reader.onload=async ev=>{try{const data=new Uint8Array(ev.target.result),wb=XLSX.read(data,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];const cols=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA','AB'];const rows=XLSX.utils.sheet_to_json(ws,{header:cols,raw:false});if(!rows.length)throw new Error('El archivo no contiene datos validos');const ops=[];for(let i=0;i<rows.length;i++){const row=rows[i];try{const nem=String(row.L||'').trim().toUpperCase();if(!nem||/^nemot|^instrumento|^nemo/i.test(nem))continue;const colG=String(row.G||'').trim().toLowerCase(),colH=String(row.H||'').trim().toLowerCase();const esC=colG.includes('compra')||colH.includes('compra');const qty=parseFloat(String(row.H||row.G||'0').replace(/\./g,'').replace(',','.'))||0;const prc=parseFloat(String(row.I||'0').replace(/\./g,'').replace(',','.'))||0;const fechaRaw=String(row.A||'').trim();let fecha=fechaRaw;if(/^\d{8}$/.test(fechaRaw))fecha=fechaRaw.slice(0,4)+'-'+fechaRaw.slice(4,6)+'-'+fechaRaw.slice(6,8);const codC=parseInt(row.Q||row.R||'0')||0;const corr=CORREDORES.find(c=>c.codigo===codC)?.nombre||String(row.Q||'');if(qty===0&&prc===0)continue;ops.push({Fecha:fecha,Tipo:esC?'Compra':'Venta',Nemotecnico:nem,Cantidad:qty,Precio:prc,Monto:qty*prc,Corredor:corr});}catch(re){console.warn('Fila '+i,re);}}if(!ops.length)throw new Error('No se encontraron operaciones validas');const fd=new FormData();fd.append('archivo',file);fd.append('operaciones',JSON.stringify(ops));fd.append('nombreArchivo',file.name);const r=await fetch(API+'/save-operaciones',{method:'POST',body:fd});if(!r.ok){const j=await r.json();throw new Error(j.error||'HTTP '+r.status);}alert('CSV procesado. '+ops.length+' operaciones guardadas.');await loadBal();await loadHist();resolve();}catch(e){errEl.textContent=e.message;errEl.classList.remove('hidden');resolve();}};reader.readAsArrayBuffer(file);});}
+function showInfo(){document.getElementById('info-modal').classList.remove('hidden');}
+function hideInfo(){document.getElementById('info-modal').classList.add('hidden');}
+document.addEventListener('DOMContentLoaded',()=>{const y=new Date();y.setDate(y.getDate()-1);const m=new Date();m.setDate(m.getDate()-30);const iso=d=>d.toISOString().split('T')[0];document.getElementById('date-single').value=iso(y);document.getElementById('date-from').value=iso(m);loadAYR();});
 </script>
 </body>
 </html>
