@@ -18,6 +18,7 @@ const {
   getLatestBci, saveBci,
   getHistorialArchivos, saveHistorialArchivo, getOperacionesByHistorial,
   deleteHistorialArchivo, getBalanceAcciones, upsertAjusteBalance, deleteAjusteBalance,
+  saveFetchDataCache, getFetchDataCache, hasFetchDataCache,
 } = require('./db');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -259,7 +260,25 @@ function buildFetchData(cats) {
 // GET /api/fetch-data
 app.get('/api/fetch-data', (_req, res) => {
   try {
-    res.json(buildFetchData());
+    if (hasFetchDataCache()) {
+      res.json(getFetchDataCache());
+    } else {
+      res.json(buildFetchData());
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/seed-fetch-data — seed fetch-data cache from reference
+app.post('/api/seed-fetch-data', (req, res) => {
+  try {
+    const rows = req.body;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: 'Expected array of rows' });
+    }
+    saveFetchDataCache(rows);
+    res.json({ ok: true, count: rows.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
